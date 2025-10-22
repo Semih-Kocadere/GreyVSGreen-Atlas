@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Veri Setleri — Greygreen</title>
+
+<!-- 
+  ============================================================================
+  VERİ SETLERİ & UPLOAD SAYFASI
+  ============================================================================
+  
+  Açıklama:
+    Kullanıcıların kendi veri setlerini yükleyebileceği ve
+    mevcut veri setlerini yönetebileceği sayfa.
+  
+  Özellikler:
+    - Drag & Drop dosya yükleme
+    - CSV, JSON, GeoJSON, GeoTIFF formatları desteklenir
+    - Yüklenen dosyaların listesi
+    - Dosya önizleme ve metadata görüntüleme
+    - Dosya silme ve düzenleme
+    - Upload ilerleme çubuğu
+  
+  Desteklenen Formatlar:
+    - CSV: Tablo verileri
+    - JSON: Yapılandırılmış veriler
+    - GeoJSON: Coğrafi veriler
+    - GeoTIFF: Uydu görüntüleri
+    - SHP: Shapefile (sıkıştırılmış ZIP)
+  
+  ============================================================================
+-->
+
+<!-- Ortak CSS -->
+<link rel="stylesheet" href="/css/common.css">
+<!-- Data-upload'a Özel CSS -->
+<link rel="stylesheet" href="/css/data-upload.css">
+</head>
+<body>
+
+<!-- Top Bar -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="sidebar-toggle" id="sidebar-toggle" title="Sidebar Aç/Kapat">☰</button>
+    <div class="topbar-brand" onclick="location.href='/dashboard.html'">🌍 Grey vs Green Atlas</div>
+  </div>
+  <div class="topbar-right">
+    <button class="topbar-btn">🔔 <span>3</span></button>
+    <div class="topbar-user">
+      <span>👤</span>
+      <span id="who">Yükleniyor...</span>
+    </div>
+    <button class="topbar-logout" id="logout">
+      <span>🚪</span>
+      <span>Çıkış</span>
+    </button>
+  </div>
+</header>
+
+<!-- Layout -->
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-resizer" id="sidebar-resizer"></div>
+    
+    <!-- Ana Menü -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Ana Menü</div>
+      <nav class="nav">
+        <a href="/dashboard.html">
+          <span>📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/map.html">
+          <span>🗺️</span>
+          <span>Harita</span>
+        </a>
+        <a href="/istanbul-detail.html">
+          <span>🔬</span>
+          <span>İstanbul Detay</span>
+        </a>
+      </nav>
+    </div>
+    
+    <!-- Veri Yönetimi -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Veri Yönetimi</div>
+      <nav class="nav">
+        <a href="/data-sources.html">
+          <span>🛰️</span>
+          <span>Veri Kaynakları</span>
+        </a>
+        <a href="/data-upload.html" class="active">
+          <span>📤</span>
+          <span>Veri Setleri</span>
+        </a>
+        <a href="/reports.html">
+          <span>🧾</span>
+          <span>Raporlar</span>
+        </a>
+      </nav>
+    </div>
+    
+    <!-- Sistem -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Sistem</div>
+      <nav class="nav">
+        <a href="/settings.html">
+          <span>⚙️</span>
+          <span>Ayarlar</span>
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="header">
+      <h1>📁 Veri Setleri</h1>
+      <p>Kendi veri setlerinizi yükleyin ve yönetin</p>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="upload-section" id="upload-area">
+      <div class="upload-icon">📤</div>
+      <div class="upload-title">Dosya Yükle</div>
+      <div class="upload-description">
+        Dosyalarınızı bu alana sürükleyip bırakın veya aşağıdaki butona tıklayın
+      </div>
+      <div class="upload-formats">
+        <span class="format-badge">CSV</span>
+        <span class="format-badge">JSON</span>
+        <span class="format-badge">GeoJSON</span>
+        <span class="format-badge">GeoTIFF</span>
+        <span class="format-badge">SHP (ZIP)</span>
+      </div>
+      <button class="upload-btn" onclick="document.getElementById('file-input').click()">
+        📁 Dosya Seç
+      </button>
+      <input type="file" id="file-input" accept=".csv,.json,.geojson,.tif,.tiff,.zip" multiple/>
+    </div>
+
+    <!-- Files Section -->
+    <div class="files-section">
+      <div class="section-header">
+        <div class="section-title">📂 Yüklü Dosyalar</div>
+        <div class="section-count">8 Dosya</div>
+      </div>
+
+      <div class="files-grid">
+        
+        <!-- File Card 1 -->
+        <div class="file-card">
+          <div class="file-type-icon">📊</div>
+          <div class="file-name">istanbul_green_areas_2024.csv</div>
+          <div class="file-meta">
+            <div class="file-meta-item">
+              <span>📅</span>
+              <span>3 gün önce</span>
+            </div>
+            <div class="file-meta-item">
+              <span>💾</span>
+              <span>2.4 MB</span>
+            </div>
+          </div>
+          <div class="file-description">
+            İstanbul'un tüm ilçeleri için 2024 yılı yeşil alan istatistikleri.
+          </div>
+          <div class="file-stats">
+            <div class="file-stat">
+              <div class="file-stat-label">Satır</div>
+              <div class="file-stat-value">5,420</div>
+            </div>
+            <div class="file-stat">
+              <div class="file-stat-label">Sütun</div>
+              <div class="file-stat-value">12</div>
+            </div>
+          </div>
+          <div class="file-actions">
+            <button class="btn btn-primary">👁️ Görüntüle</button>
+            <button class="btn btn-danger">🗑️ Sil</button>
+          </div>
+        </div>
+
+        <!-- File Card 2 -->
+        <div class="file-card">
+          <div class="file-type-icon">🗺️</div>
+          <div class="file-name">districts_boundaries.geojson</div>
+          <div class="file-meta">
+            <div class="file-meta-item">
+              <span>📅</span>
+              <span>1 hafta önce</span>
+            </div>
+            <div class="file-meta-item">
+              <span>💾</span>
+              <span>850 KB</span>
+            </div>
+          </div>
+          <div class="file-description">
+            İstanbul ilçe sınırları poligon verileri (GeoJSON formatında).
+          </div>
+          <div class="file-stats">
+            <div class="file-stat">
+              <div class="file-stat-label">Features</div>
+              <div class="file-stat-value">39</div>
+            </div>
+            <div class="file-stat">
+              <div class="file-stat-label">Type</div>
+              <div class="file-stat-value">Polygon</div>
+            </div>
+          </div>
+          <div class="file-actions">
+            <button class="btn btn-primary">👁️ Görüntüle</button>
+            <button class="btn btn-danger">🗑️ Sil</button>
+          </div>
+        </div>
+
+        <!-- File Card 3 -->
+        <div class="file-card">
+          <div class="file-type-icon">🛰️</div>
+          <div class="file-name">sentinel2_istanbul_20240115.tif</div>
+          <div class="file-meta">
+            <div class="file-meta-item">
+              <span>📅</span>
+              <span>2 hafta önce</span>
+            </div>
+            <div class="file-meta-item">
+              <span>💾</span>
+              <span>245 MB</span>
+            </div>
+          </div>
+          <div class="file-description">
+            Sentinel-2 uydu görüntüsü, 10m çözünürlük, RGB bantları.
+          </div>
+          <div class="file-stats">
+            <div class="file-stat">
+              <div class="file-stat-label">Boyut</div>
+              <div class="file-stat-value">4000x3000</div>
+            </div>
+            <div class="file-stat">
+              <div class="file-stat-label">Bantlar</div>
+              <div class="file-stat-value">4</div>
+            </div>
+          </div>
+          <div class="file-actions">
+            <button class="btn btn-primary">👁️ Görüntüle</button>
+            <button class="btn btn-danger">🗑️ Sil</button>
+          </div>
+        </div>
+
+        <!-- File Card 4 -->
+        <div class="file-card">
+          <div class="file-type-icon">📋</div>
+          <div class="file-name">park_inventory.json</div>
+          <div class="file-meta">
+            <div class="file-meta-item">
+              <span>📅</span>
+              <span>5 gün önce</span>
+            </div>
+            <div class="file-meta-item">
+              <span>💾</span>
+              <span>1.2 MB</span>
+            </div>
+          </div>
+          <div class="file-description">
+            İstanbul'daki tüm parkların envanteri (isim, konum, alan).
+          </div>
+          <div class="file-stats">
+            <div class="file-stat">
+              <div class="file-stat-label">Kayıt</div>
+              <div class="file-stat-value">1,245</div>
+            </div>
+            <div class="file-stat">
+              <div class="file-stat-label">Alan</div>
+              <div class="file-stat-value">8 Field</div>
+            </div>
+          </div>
+          <div class="file-actions">
+            <button class="btn btn-primary">👁️ Görüntüle</button>
+            <button class="btn btn-danger">🗑️ Sil</button>
+          </div>
+        </div>
+
+        <!-- File Card 5 -->
+        <div class="file-card">
+          <div class="file-type-icon">📊</div>
+          <div class="file-name">population_density.csv</div>
+          <div class="file-meta">
+            <div class="file-meta-item">
+              <span>📅</span>
+              <span>1 ay önce</span>
+            </div>
+            <div class="file-meta-item">
+              <span>💾</span>
+              <span>456 KB</span>
+            </div>
+          </div>
+          <div class="file-description">
+            İlçe bazlı nüfus yoğunluğu verileri (kişi/km²).
+          </div>
+          <div class="file-stats">
+            <div class="file-stat">
+              <div class="file-stat-label">Satır</div>
+              <div class="file-stat-value">39</div>
+            </div>
+            <div class="file-stat">
+              <div class="file-stat-label">Sütun</div>
+              <div class="file-stat-value">8</div>
+            </div>
+          </div>
+          <div class="file-actions">
+            <button class="btn btn-primary">👁️ Görüntüle</button>
+            <button class="btn btn-danger">🗑️ Sil</button>
+          </div>
+        </div>
+
+        <!-- File Card 6 -->
+        <div class="file-card">
+          <div class="file-type-icon">🗺️</div>
+          <div class="file-name">roads_network.geojson</div>
+          <div class="file-meta">
+            <div class="file-meta-item">
+              <span>📅</span>
+              <span>2 ay önce</span>
+            </div>
+            <div class="file-meta-item">
+              <span>💾</span>
+              <span>3.8 MB</span>
+            </div>
+          </div>
+          <div class="file-description">
+            Yol ağı verileri (LineString geometrileri).
+          </div>
+          <div class="file-stats">
+            <div class="file-stat">
+              <div class="file-stat-label">Features</div>
+              <div class="file-stat-value">12,450</div>
+            </div>
+            <div class="file-stat">
+              <div class="file-stat-label">Type</div>
+              <div class="file-stat-value">LineString</div>
+            </div>
+          </div>
+          <div class="file-actions">
+            <button class="btn btn-primary">👁️ Görüntüle</button>
+            <button class="btn btn-danger">🗑️ Sil</button>
+          </div>
+        </div>
+
+        <!-- File Card 7 -->
+        <div class="file-card">
+          <div class="file-type-icon">🛰️</div>
+          <div class="file-name">landsat8_istanbul_summer.tif</div>
+          <div class="file-meta">
+            <div class="file-meta-item">
+              <span>📅</span>
+              <span>3 hafta önce</span>
+            </div>
+            <div class="file-meta-item">
+              <span>💾</span>
+              <span>180 MB</span>
+            </div>
+          </div>
+          <div class="file-description">
+            Landsat-8 yaz dönemi görüntüsü, 30m çözünürlük.
+          </div>
+          <div class="file-stats">
+            <div class="file-stat">
+              <div class="file-stat-label">Boyut</div>
+              <div class="file-stat-value">3500x2800</div>
+            </div>
+            <div class="file-stat">
+              <div class="file-stat-label">Bantlar</div>
+              <div class="file-stat-value">7</div>
+            </div>
+          </div>
+          <div class="file-actions">
+            <button class="btn btn-primary">👁️ Görüntüle</button>
+            <button class="btn btn-danger">🗑️ Sil</button>
+          </div>
+        </div>
+
+        <!-- File Card 8 -->
+        <div class="file-card">
+          <div class="file-type-icon">📋</div>
+          <div class="file-name">building_footprints.json</div>
+          <div class="file-meta">
+            <div class="file-meta-item">
+              <span>📅</span>
+              <span>1 ay önce</span>
+            </div>
+            <div class="file-meta-item">
+              <span>💾</span>
+              <span>5.2 MB</span>
+            </div>
+          </div>
+          <div class="file-description">
+            Bina kontur verileri (polygon geometrileri).
+          </div>
+          <div class="file-stats">
+            <div class="file-stat">
+              <div class="file-stat-label">Kayıt</div>
+              <div class="file-stat-value">28,540</div>
+            </div>
+            <div class="file-stat">
+              <div class="file-stat-label">Alan</div>
+              <div class="file-stat-value">6 Field</div>
+            </div>
+          </div>
+          <div class="file-actions">
+            <button class="btn btn-primary">👁️ Görüntüle</button>
+            <button class="btn btn-danger">🗑️ Sil</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Progress Overlay -->
+<div class="progress-overlay" id="progress-overlay">
+  <div class="progress-card">
+    <div class="progress-icon">⬆️</div>
+    <div class="progress-title">Dosya Yükleniyor</div>
+    <div class="progress-file" id="progress-filename">example_file.csv</div>
+    <div class="progress-bar-container">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="progress-percent" id="progress-percent">0%</div>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// KİMLİK DOĞRULAMA (Authentication)
+// ============================================================================
+
+const token = localStorage.getItem('token');
+if (!token) {
+  location.href = '/';
+}
+
+async function whoami() {
+  try {
+    const response = await fetch('/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    if (!response.ok) {
+      localStorage.removeItem('token');
+      location.href = '/';
+      return;
+    }
+    
+    const user = await response.json();
+    document.getElementById('who').textContent = user.email;
+  } catch (error) {
+    console.error('Kullanıcı bilgisi alınamadı:', error);
+    location.href = '/';
+  }
+}
+
+whoami();
+
+document.getElementById('logout').onclick = () => {
+  localStorage.removeItem('token');
+  location.href = '/';
+};
+
+
+// ============================================================================
+// SIDEBAR İŞLEVLERİ (Sidebar Functions)
+// ============================================================================
+
+const sidebarToggle = document.getElementById('sidebar-toggle');
+const sidebar = document.getElementById('sidebar');
+let isCollapsed = false;
+
+sidebarToggle.onclick = () => {
+  isCollapsed = !isCollapsed;
+  sidebar.classList.toggle('collapsed', isCollapsed);
+  sidebarToggle.textContent = isCollapsed ? '☰' : '✕';
+  sidebarToggle.title = isCollapsed ? 'Sidebar Aç' : 'Sidebar Kapat';
+};
+
+const resizer = document.getElementById('sidebar-resizer');
+let isResizing = false;
+let startX = 0;
+let startWidth = 0;
+
+resizer.addEventListener('mousedown', (e) => {
+  isResizing = true;
+  startX = e.clientX;
+  startWidth = sidebar.offsetWidth;
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!isResizing) return;
+  const diff = e.clientX - startX;
+  const newWidth = Math.max(250, Math.min(600, startWidth + diff));
+  sidebar.style.width = newWidth + 'px';
+  document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
+});
+
+document.addEventListener('mouseup', () => {
+  if (!isResizing) return;
+  isResizing = false;
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+});
+
+
+// ============================================================================
+// DOSYA YÜKLEME (File Upload)
+// ============================================================================
+
+const uploadArea = document.getElementById('upload-area');
+const fileInput = document.getElementById('file-input');
+const progressOverlay = document.getElementById('progress-overlay');
+const progressBar = document.getElementById('progress-bar');
+const progressPercent = document.getElementById('progress-percent');
+const progressFilename = document.getElementById('progress-filename');
+
+/**
+ * Drag & Drop - Dosya üzerine geldiğinde stil değiştir
+ */
+uploadArea.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  uploadArea.classList.add('dragging');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+  uploadArea.classList.remove('dragging');
+});
+
+/**
+ * Drag & Drop - Dosya bırakıldığında yükle
+ */
+uploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragging');
+  
+  const files = e.dataTransfer.files;
+  if (files.length > 0) {
+    handleFileUpload(files);
+  }
+});
+
+/**
+ * File input değişikliği - butona tıklandığında
+ */
+fileInput.addEventListener('change', (e) => {
+  const files = e.target.files;
+  if (files.length > 0) {
+    handleFileUpload(files);
+  }
+});
+
+/**
+ * Dosya yükleme işlemi (simüle edilmiş)
+ * Gerçek uygulamada backend'e FormData ile gönderilir
+ */
+function handleFileUpload(files) {
+  const file = files[0]; // İlk dosyayı al
+  
+  // Progress overlay'i göster
+  progressFilename.textContent = file.name;
+  progressOverlay.classList.add('active');
+  
+  // Simüle edilmiş upload progress
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += Math.random() * 15;
+    
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(interval);
+      
+      // Upload tamamlandı
+      setTimeout(() => {
+        progressOverlay.classList.remove('active');
+        progressBar.style.width = '0%';
+        progressPercent.textContent = '0%';
+        alert(`✅ ${file.name} başarıyla yüklendi!`);
+        
+        // Dosya listesini yenile (gerçek uygulamada API'den çek)
+        // location.reload();
+      }, 500);
+    }
+    
+    progressBar.style.width = progress + '%';
+    progressPercent.textContent = Math.round(progress) + '%';
+  }, 200);
+}
+
+
+// ============================================================================
+// DOSYA İŞLEMLERİ (File Actions)
+// ============================================================================
+
+/**
+ * Görüntüle butonları
+ */
+document.querySelectorAll('.btn-primary').forEach(btn => {
+  btn.onclick = function(e) {
+    e.preventDefault();
+    const fileName = this.closest('.file-card').querySelector('.file-name').textContent;
+    alert(`${fileName} görüntüleniyor...\n\nGerçek uygulamada bu dosya için önizleme/viewer açılacak.`);
+  };
+});
+
+/**
+ * Sil butonları
+ */
+document.querySelectorAll('.btn-danger').forEach(btn => {
+  btn.onclick = function(e) {
+    e.preventDefault();
+    const fileName = this.closest('.file-card').querySelector('.file-name').textContent;
+    
+    if (confirm(`${fileName} dosyasını silmek istediğinizden emin misiniz?`)) {
+      alert('Dosya siliniyor...\n\nGerçek uygulamada backend API\'ye DELETE isteği gönderilecek.');
+      // TODO: API call to delete file
+      // this.closest('.file-card').remove();
+    }
+  };
+});
+
+</script>
+</body>
+</html>

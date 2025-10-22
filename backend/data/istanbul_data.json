@@ -1,0 +1,116 @@
+{
+  "metadata": {
+    "city": "Istanbul",
+    "last_updated": "2024-10-14",
+    "sources": [
+      "İBB Açık Veri Portalı - Kentsel Yeşil Alan Bilgileri (2024)",
+      "TÜİK - İstanbul Nüfus İstatistikleri (2024)",
+      "Sentinel-2 Uydu Görüntüleri Analizi"
+    ]
+  },
+  "summary": {
+    "total_area_km2": 5461,
+    "green_area_km2": 1704,
+    "grey_area_km2": 3353,
+    "water_area_km2": 404,
+    "green_loss_rate_yearly": -1.2,
+    "urbanization_rate": 1.8,
+    "population": 15907951,
+    "green_per_capita_m2": 10.7
+  },
+  "historical": [
+    {"year": 2019, "green": 36.8, "grey": 55.8, "water": 7.4},
+    {"year": 2020, "green": 35.4, "grey": 57.2, "water": 7.4},
+    {"year": 2021, "green": 34.2, "grey": 58.4, "water": 7.4},
+    {"year": 2022, "green": 33.0, "grey": 59.6, "water": 7.4},
+    {"year": 2023, "green": 31.8, "grey": 60.8, "water": 7.4},
+    {"year": 2024, "green": 31.2, "grey": 61.4, "water": 7.4}
+  ],
+  "predictions": [
+    {"period": "now", "date": "2024-10", "green": 31.2, "grey": 61.4, "water": 7.4},
+    {"period": "6m", "date": "2025-04", "green": 30.7, "grey": 61.9, "water": 7.4},
+    {"period": "12m", "date": "2025-10", "green": 30.1, "grey": 62.4, "water": 7.5}
+  ],
+  "districts": [
+    {"name": "Sarıyer", "lat": 41.1686, "lng": 29.0528, "change": -0.8, "risk": "low", "now_green": 65, "future_green": 64.2},
+    {"name": "Beykoz", "lat": 41.1650, "lng": 29.1100, "change": -1.0, "risk": "low", "now_green": 62, "future_green": 61.0},
+    {"name": "Eyüpsultan", "lat": 41.0500, "lng": 28.9167, "change": -1.5, "risk": "medium", "now_green": 48, "future_green": 46.5},
+    {"name": "Kadıköy", "lat": 40.9833, "lng": 29.0333, "change": -1.2, "risk": "medium", "now_green": 28, "future_green": 26.8},
+    {"name": "Şişli", "lat": 41.0602, "lng": 28.9872, "change": -1.8, "risk": "high", "now_green": 15, "future_green": 13.2},
+    {"name": "Fatih", "lat": 41.0192, "lng": 28.9497, "change": -1.5, "risk": "critical", "now_green": 12, "future_green": 10.5},
+    {"name": "Beşiktaş", "lat": 41.0422, "lng": 29.0094, "change": -1.3, "risk": "medium", "now_green": 25, "future_green": 23.7},
+    {"name": "Beyoğlu", "lat": 41.0370, "lng": 28.9784, "change": -1.4, "risk": "high", "now_green": 18, "future_green": 16.6},
+    {"name": "Üsküdar", "lat": 41.0227, "lng": 29.0742, "change": -1.1, "risk": "medium", "now_green": 32, "future_green": 30.9},
+    {"name": "Maltepe", "lat": 40.9333, "lng": 29.1333, "change": -1.0, "risk": "medium", "now_green": 30, "future_green": 29.0},
+    {"name": "Pendik", "lat": 40.8783, "lng": 29.2333, "change": -0.9, "risk": "low", "now_green": 35, "future_green": 34.1},
+    {"name": "Kartal", "lat": 40.9000, "lng": 29.1833, "change": -1.0, "risk": "medium", "now_green": 33, "future_green": 32.0},
+    {"name": "Ataşehir", "lat": 40.9833, "lng": 29.1167, "change": -1.2, "risk": "medium", "now_green": 27, "future_green": 25.8},
+    {"name": "Bakırköy", "lat": 40.9833, "lng": 28.8667, "change": -1.3, "risk": "medium", "now_green": 23, "future_green": 21.7},
+    {"name": "Küçükçekmece", "lat": 41.0167, "lng": 28.7833, "change": -1.4, "risk": "high", "now_green": 20, "future_green": 18.6}
+  ],
+  "regions": [
+    {
+      "name": "Tarihi Yarımada (Fatih)",
+      "center": [41.0092, 28.9762],
+      "now": {"green": 12, "grey": 81, "water": 7},
+      "6m": {"green": 11, "grey": 82, "water": 7},
+      "12m": {"green": 10.5, "grey": 82.5, "water": 7}
+    },
+    {
+      "name": "Boğaziçi (Avrupa Yakası)",
+      "center": [41.0422, 29.0094],
+      "now": {"green": 35, "grey": 58, "water": 7},
+      "6m": {"green": 34, "grey": 59, "water": 7},
+      "12m": {"green": 33, "grey": 60, "water": 7}
+    },
+    {
+      "name": "Boğaziçi (Asya Yakası)",
+      "center": [41.0227, 29.0742],
+      "now": {"green": 38, "grey": 55, "water": 7},
+      "6m": {"green": 37, "grey": 56, "water": 7},
+      "12m": {"green": 36, "grey": 57, "water": 7}
+    },
+    {
+      "name": "Kuzey Ormanları (Sarıyer-Beykoz)",
+      "center": [41.1686, 29.0528],
+      "now": {"green": 68, "grey": 25, "water": 7},
+      "6m": {"green": 67, "grey": 26, "water": 7},
+      "12m": {"green": 66.5, "grey": 26.5, "water": 7}
+    },
+    {
+      "name": "Şehir Merkezi (Şişli-Beşiktaş)",
+      "center": [41.0602, 28.9872],
+      "now": {"green": 15, "grey": 78, "water": 7},
+      "6m": {"green": 14, "grey": 79, "water": 7},
+      "12m": {"green": 13.2, "grey": 79.8, "water": 7}
+    },
+    {
+      "name": "Anadolu Yakası (Kadıköy-Maltepe)",
+      "center": [40.9833, 29.0333],
+      "now": {"green": 28, "grey": 65, "water": 7},
+      "6m": {"green": 27, "grey": 66, "water": 7},
+      "12m": {"green": 26.8, "grey": 66.2, "water": 7}
+    },
+    {
+      "name": "Batı (Avcılar-Küçükçekmece)",
+      "center": [40.9833, 28.7667],
+      "now": {"green": 22, "grey": 71, "water": 7},
+      "6m": {"green": 21, "grey": 72, "water": 7},
+      "12m": {"green": 20, "grey": 73, "water": 7}
+    },
+    {
+      "name": "Doğu (Pendik-Tuzla)",
+      "center": [40.8833, 29.2667],
+      "now": {"green": 32, "grey": 62, "water": 6},
+      "6m": {"green": 31, "grey": 63, "water": 6},
+      "12m": {"green": 30, "grey": 64, "water": 6}
+    },
+    {
+      "name": "Adalar (Büyükada-Heybeliada)",
+      "center": [40.8600, 29.1100],
+      "now": {"green": 58, "grey": 34, "water": 8},
+      "6m": {"green": 58, "grey": 34, "water": 8},
+      "12m": {"green": 57.5, "grey": 34.5, "water": 8}
+    }
+  ]
+}

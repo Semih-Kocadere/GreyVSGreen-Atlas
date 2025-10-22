@@ -1,0 +1,273 @@
+/* ============================================================================
+   VERİ YÜKLEME SAYFASI - ÖZEL STİLLER
+   ============================================================================
+   
+   Bu dosya sadece data-upload.html için özel stilleri içerir.
+   Ortak stiller common.css'de tanımlıdır.
+   
+   ============================================================================
+*/
+
+/* Ana İçerik */
+.content {
+  padding: 48px;
+}
+
+.content h1 {
+  font-size: 52px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ffffff, rgba(255,255,255,0.7));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -2px;
+  margin-bottom: 12px;
+}
+
+.content > p {
+  font-size: 18px;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 40px;
+}
+
+/* Upload Area */
+.upload-container {
+  max-width: 800px;
+  margin: 0 auto 48px;
+}
+
+.upload-area {
+  background: rgba(255,255,255,0.98);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 60px 40px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  border: 3px dashed rgba(2,132,199,0.3);
+  text-align: center;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.upload-area:hover {
+  border-color: var(--accent-solid);
+  background: rgba(2,132,199,0.02);
+  transform: translateY(-4px);
+}
+
+.upload-area.dragging {
+  border-color: var(--accent-solid);
+  background: rgba(2,132,199,0.08);
+  border-style: solid;
+}
+
+.upload-icon {
+  font-size: 72px;
+  margin-bottom: 24px;
+  opacity: 0.8;
+}
+
+.upload-area h3 {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.upload-area p {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.upload-btn {
+  padding: 16px 32px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent-gradient);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 16px rgba(2,132,199,0.3);
+}
+
+.upload-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(2,132,199,0.5);
+}
+
+.upload-input {
+  display: none;
+}
+
+/* Progress Bar */
+.upload-progress {
+  margin-top: 32px;
+  display: none;
+}
+
+.upload-progress.active {
+  display: block;
+}
+
+.progress-bar {
+  height: 12px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent-gradient);
+  transition: width 0.3s;
+  border-radius: 6px;
+}
+
+.progress-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* Uploaded Files List */
+.files-section {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.files-section h2 {
+  font-size: 36px;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 28px;
+}
+
+.files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.file-card {
+  background: rgba(255,255,255,0.98);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  border: 2px solid rgba(255,255,255,0.2);
+  transition: all 0.3s;
+}
+
+.file-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(2,132,199,0.2);
+  border-color: rgba(2,132,199,0.3);
+}
+
+.file-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.file-icon {
+  font-size: 36px;
+  flex-shrink: 0;
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  word-break: break-word;
+}
+
+.file-size {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.file-meta {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.file-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.file-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.file-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.file-btn-primary {
+  background: var(--accent-gradient);
+  color: white;
+}
+
+.file-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(2,132,199,0.3);
+}
+
+.file-btn-danger {
+  background: rgba(239,68,68,0.1);
+  color: #dc2626;
+  border: 2px solid rgba(239,68,68,0.2);
+}
+
+.file-btn-danger:hover {
+  background: #dc2626;
+  color: white;
+  border-color: #dc2626;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .content {
+    padding: 32px 24px;
+  }
+  
+  .content h1 {
+    font-size: 36px;
+  }
+  
+  .upload-area {
+    padding: 40px 28px;
+  }
+  
+  .files-grid {
+    grid-template-columns: 1fr;
+  }
+}

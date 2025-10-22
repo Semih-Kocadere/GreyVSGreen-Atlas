@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Harita — Greygreen</title>
+
+<!-- CSS -->
+<link rel="stylesheet" href="/css/common.css">
+<link rel="stylesheet" href="/css/map.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+</head>
+<body>
+<!-- Top Bar -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="sidebar-toggle" id="sidebar-toggle" title="Sidebar Aç/Kapat">☰</button>
+    <div class="topbar-brand" onclick="location.href='/dashboard.html'">🌍 Grey vs Green Atlas</div>
+  </div>
+  <div class="topbar-right">
+    <button class="topbar-btn">🔔 <span>3</span></button>
+    <div class="topbar-user">
+      <span>👤</span>
+      <span id="who">Yükleniyor...</span>
+    </div>
+    <button class="topbar-logout" id="logout">
+      <span>🚪</span>
+      <span>Çıkış</span>
+    </button>
+  </div>
+</header>
+
+<!-- Layout with Sidebar -->
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-resizer" id="sidebar-resizer"></div>
+
+    <!-- Ana Menü -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Ana Menü</div>
+      <nav class="nav">
+        <a href="/dashboard.html">
+          <span>📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/map.html" class="active">
+          <span>🗺️</span>
+          <span>Harita</span>
+        </a>
+        <a href="/istanbul-detail.html">
+          <span>🔬</span>
+          <span>İstanbul Detay</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Veri Yönetimi -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Veri Yönetimi</div>
+      <nav class="nav">
+        <a href="/data-sources.html">
+          <span>🛰️</span>
+          <span>Veri Kaynakları</span>
+        </a>
+        <a href="/data-upload.html">
+          <span>📤</span>
+          <span>Veri Setleri</span>
+        </a>
+        <a href="/reports.html">
+          <span>🧾</span>
+          <span>Raporlar</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Sistem -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Sistem</div>
+      <nav class="nav">
+        <a href="/settings.html">
+          <span>⚙️</span>
+          <span>Ayarlar</span>
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="map-wrapper">
+      <div id="loading" class="loading">
+        <div class="loading-spinner">🌍</div>
+        <div class="loading-text">Harita Yükleniyor...</div>
+      </div>
+      
+      <div id="map"></div>
+  
+  <!-- Right Control Panel -->
+  <div class="right-panel" id="right-panel">
+    <button class="panel-close" id="panel-close">✕</button>
+    
+    <div class="panel-header">
+      <h3>🎛️ Harita Kontrolleri</h3>
+    </div>
+    
+    <!-- Görüntüleme Dönemi -->
+    <div class="panel-section">
+      <label class="panel-label">📅 Zaman Dilimi</label>
+      <div class="timeframe-buttons">
+        <button class="timeframe-btn active" data-time="now">
+          <span>📍 2024 Q4</span>
+          <span class="icon">✓</span>
+        </button>
+        <button class="timeframe-btn" data-time="6m">
+          <span>📈 2025 Q2</span>
+          <span class="icon"></span>
+        </button>
+        <button class="timeframe-btn" data-time="12m">
+          <span>� 2025 Q4</span>
+          <span class="icon"></span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Görüntüleme Modu -->
+    <div class="panel-section">
+      <label class="panel-label">📊 Görünüm Modu</label>
+      <div class="view-mode">
+        <button class="view-btn active" data-mode="markers">📍 Noktalar</button>
+        <button class="view-btn" data-mode="heatmap">🔥 Isı Haritası</button>
+      </div>
+    </div>
+    
+    <!-- Uydu Katmanı -->
+    <div class="panel-section">
+      <label class="panel-label">🛰️ Uydu Görüntüsü</label>
+      <div class="view-mode">
+        <button class="view-btn" id="satellite-toggle" data-satellite="off" style="width:100%">
+          <span>🗺️ Normal Harita</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- İstatistikler -->
+    <div class="panel-section">
+      <label class="panel-label">📊 İstanbul Özeti</label>
+      <div class="info-stats">
+        <div class="info-stat">
+          <div class="info-stat-label">🌳 Yeşil Alan</div>
+          <div class="info-stat-value" id="avg-green">-</div>
+        </div>
+        <div class="info-stat">
+          <div class="info-stat-label">🏢 Beton</div>
+          <div class="info-stat-value" id="avg-grey">-</div>
+        </div>
+        <div class="info-stat">
+          <div class="info-stat-label">💧 Su</div>
+          <div class="info-stat-value" id="avg-water">-</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Gösterge -->
+    <div class="panel-section">
+      <label class="panel-label">🎨 Renk Göstergesi</label>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-color legend-green"></div>
+          <span>Yeşil Alan</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color legend-grey"></div>
+          <span>Beton/Gri Alan</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color legend-water"></div>
+          <span>Su Kaynakları</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  </main>
+</div>
+
+<script>
+// ============================================================================
+// KİMLİK DOĞRULAMA (Authentication)
+// ============================================================================
+
+// JWT token'ı kontrol et - yoksa login'e yönlendir
+const token = localStorage.getItem('token');
+if (!token) {
+  location.href = '/';
+}
+
+/**
+ * Kullanıcı bilgilerini çek ve topbar'da göster
+ * API: GET /me
+ */
+async function whoami() {
+  try {
+    const response = await fetch('/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    if (!response.ok) {
+      // Token geçersizse login'e yönlendir
+      localStorage.removeItem('token');
+      location.href = '/';
+      return;
+    }
+    
+    const user = await response.json();
+    document.getElementById('who').textContent = user.email;
+  } catch (error) {
+    console.error('Kullanıcı bilgisi alınamadı:', error);
+    location.href = '/';
+  }
+}
+
+whoami();
+
+/**
+ * Çıkış butonu - token'ı sil ve login'e yönlendir
+ */
+document.getElementById('logout').onclick = () => {
+  localStorage.removeItem('token');
+  location.href = '/';
+};
+
+/**
+ * Sidebar toggle functionality
+ */
+const sidebarToggle = document.getElementById('sidebar-toggle');
+const sidebar = document.getElementById('sidebar');
+let isCollapsed = true; // Start collapsed on map page
+
+// Initialize sidebar as collapsed
+sidebar.classList.add('collapsed');
+sidebarToggle.textContent = '☰';
+
+sidebarToggle.onclick = () => {
+  isCollapsed = !isCollapsed;
+  sidebar.classList.toggle('collapsed', isCollapsed);
+  sidebarToggle.textContent = isCollapsed ? '☰' : '✕';
+};
+
+/**
+ * Sidebar resize functionality
+ */
+const resizer = document.getElementById('sidebar-resizer');
+let isResizing = false;
+let startX = 0;
+let startWidth = 0;
+
+resizer.addEventListener('mousedown', (e) => {
+  isResizing = true;
+  startX = e.clientX;
+  startWidth = sidebar.offsetWidth;
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!isResizing) return;
+  const diff = e.clientX - startX;
+  const newWidth = Math.max(250, Math.min(600, startWidth + diff));
+  sidebar.style.width = newWidth + 'px';
+});
+
+document.addEventListener('mouseup', () => {
+  if (!isResizing) return;
+  isResizing = false;
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+});
+
+/**
+ * Right panel open/close functionality
+ */
+const rightPanel = document.getElementById('right-panel');
+const panelCloseBtn = document.getElementById('panel-close');
+let panelToggleBtn = null;
+
+// Make panel draggable
+let isDraggingPanel = false;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+
+// Drag functionality
+const panelHeader = rightPanel.querySelector('.panel-header');
+panelHeader.style.cursor = 'move';
+panelHeader.addEventListener('mousedown', (e) => {
+  if (e.target.closest('.panel-close')) return; // Don't drag when clicking close button
+  
+  isDraggingPanel = true;
+  
+  // Calculate offset from mouse position to panel's current position
+  const rect = rightPanel.getBoundingClientRect();
+  dragOffsetX = e.clientX - rect.left;
+  dragOffsetY = e.clientY - rect.top;
+  
+  document.body.style.userSelect = 'none';
+  rightPanel.style.transition = 'none'; // Disable transition during drag
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!isDraggingPanel) return;
+  
+  // Calculate new position
+  let newX = e.clientX - dragOffsetX;
+  let newY = e.clientY - dragOffsetY;
+  
+  // Constrain to viewport
+  const maxX = window.innerWidth - rightPanel.offsetWidth;
+  const maxY = window.innerHeight - rightPanel.offsetHeight;
+  
+  newX = Math.max(0, Math.min(newX, maxX));
+  newY = Math.max(0, Math.min(newY, maxY));
+  
+  // Apply new position
+  rightPanel.style.right = 'auto';
+  rightPanel.style.bottom = 'auto';
+  rightPanel.style.left = newX + 'px';
+  rightPanel.style.top = newY + 'px';
+});
+
+document.addEventListener('mouseup', () => {
+  if (!isDraggingPanel) return;
+  isDraggingPanel = false;
+  document.body.style.userSelect = '';
+  rightPanel.style.transition = ''; // Re-enable transition
+});
+
+// Close panel
+panelCloseBtn.addEventListener('click', () => {
+  rightPanel.style.transform = 'translateX(420px)';
+  rightPanel.style.opacity = '0';
+  setTimeout(() => {
+    rightPanel.style.display = 'none';
+    // Create toggle button to reopen panel
+    if (!panelToggleBtn) {
+      panelToggleBtn = document.createElement('button');
+      panelToggleBtn.id = 'panel-toggle';
+      panelToggleBtn.innerHTML = '⚙️';
+      panelToggleBtn.style.cssText = `
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        border: 2px solid rgba(59, 130, 246, 0.3);
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.85));
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        z-index: 1000;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      `;
+      panelToggleBtn.addEventListener('mouseenter', () => {
+        panelToggleBtn.style.transform = 'scale(1.1)';
+        panelToggleBtn.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+      });
+      panelToggleBtn.addEventListener('mouseleave', () => {
+        panelToggleBtn.style.transform = 'scale(1)';
+        panelToggleBtn.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+      });
+      panelToggleBtn.addEventListener('click', () => {
+        rightPanel.style.display = 'flex';
+        rightPanel.style.right = '20px';
+        rightPanel.style.top = '20px';
+        rightPanel.style.left = 'auto';
+        rightPanel.style.bottom = '20px';
+        setTimeout(() => {
+          rightPanel.style.transform = 'translateX(0)';
+          rightPanel.style.opacity = '1';
+        }, 10);
+        panelToggleBtn.remove();
+        panelToggleBtn = null;
+      });
+      document.body.appendChild(panelToggleBtn);
+    }
+  }, 300);
+});
+
+
+// ============================================================================
+// HARİTA BAŞLATMA (Map Initialization)
+// ============================================================================
+
+/**
+ * Leaflet haritasını oluştur
+ * Başlangıç görünümü: Türkiye merkezi (39.0, 35.0) zoom 7.4
+ */
+const map = L.map('map', {
+  zoomControl: true,
+  scrollWheelZoom: true,
+  doubleClickZoom: false,  // Çift tıklama ile ani zoom kapalı
+  dragging: true,
+  zoomSnap: 0.10,  // Zoom adımlarını 0.10'a düşürür (çok yumuşak)
+  zoomDelta: 0.5,  // Butonlar için zoom değişimi
+  wheelPxPerZoomLevel: 120  // Mouse wheel hassasiyeti (yavaş zoom)
+}).setView([39.0, 35.0], 7.4);
+
+/**
+ * OpenStreetMap tile layer'ını ekle (ücretsiz harita katmanı)
+ * Tiles: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+ * {s}: sunucu (a,b,c), {z}: zoom, {x}/{y}: koordinatlar
+ */
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors',
+  maxZoom: 18  // Maksimum zoom seviyesii
+}).addTo(map);
+
+
+// ============================================================================
+// GLOBAL DEĞİŞKENLER (Global Variables)
+// ============================================================================
+
+let cityMarkers = [];           // Türkiye şehir marker'ları (10 şehir)
+let detailMarkers = [];         // İstanbul ilçe marker'ları (15 ilçe)
+let currentTimeframe = 'now';   // Aktif zaman dilimi: 'now', '6m', '12m'
+let currentViewMode = 'markers'; // Görselleştirme modu: 'markers' veya 'heatmap'
+let heatmapLayer = null;        // Leaflet heatmap layer nesnesi
+let currentData = null;         // Son yüklenen veri (tekrar render için)
+let showingDetails = false;     // İstanbul detayları gösteriliyor mu?
+let satelliteLayer = null;      // Uydu görüntü katmanı (NDVI/NDWI/NDBI/RGB)
+let currentIndex = 'ndvi';      // Aktif index: 'ndvi', 'ndwi', 'ndbi', 'rgb'
+
+
+// ============================================================================
+// TÜRKİYE ŞEHİRLERİNİ YÜKLE (Load Turkey Cities)
+// ============================================================================
+
+/**
+ * Türkiye'nin 10 büyük şehrini haritaya ekle
+ * API: GET /api/map/turkey
+ * 
+ * İşleyiş:
+ *   1. Backend'den GeoJSON formatında şehir verileri al
+ *   2. Her şehir için circleMarker oluştur
+ *   3. İstanbul yeşil (aktif), diğerleri gri (pasif)
+ *   4. Aktif şehirlere tıklanınca detay görünümü aç
+ *   5. Popup'ta şehir adı, nüfus ve durum bilgisi
+ */
+async function loadTurkeyCities() {
+  try {
+    // Backend API'den şehir verilerini çek
+    const response = await fetch('/api/map/turkey', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Şehir verileri yüklenemedi');
+    }
+    
+    const data = await response.json();
+    
+    data.features.forEach(feature => {
+      const props = feature.properties;
+      const coords = feature.geometry.coordinates;
+      
+      // Create marker
+      const isActive = props.active;
+      const marker = L.circleMarker([coords[1], coords[0]], {
+        radius: isActive ? 20 : 15,
+        fillColor: isActive ? '#10b981' : '#94a3b8',
+        color: 'white',
+        weight: 3,
+        opacity: 1,
+        fillOpacity: isActive ? 0.9 : 0.5
+      }).addTo(map);
+      
+      // Popup content
+      const popupContent = `
+        <div style="padding:12px;min-width:200px">
+          <div style="font-weight:900;font-size:18px;margin-bottom:8px;color:#0284c7">${props.name}</div>
+          <div style="font-size:13px;color:#64748b;margin-bottom:12px">
+            👥 Nüfus: <strong>${props.population.toLocaleString()}</strong>
+          </div>
+          ${isActive ? 
+            '<button onclick="location.href=\'/istanbul-detail.html\'" style="width:100%;padding:12px;background:linear-gradient(135deg,#0284c7,#0891b2);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:14px">🔬 Detaylı Analiz</button>' : 
+            '<div style="text-align:center;color:#94a3b8;font-size:12px;font-weight:600">Yakında Aktif</div>'
+          }
+        </div>
+      `;
+      
+      marker.bindPopup(popupContent);
+      
+      // Click handler for active cities
+      if(isActive) {
+        marker.on('click', () => {
+          // Show Istanbul details on map
+          showIstanbulDetails();
+        });
+      }
+      
+      cityMarkers.push(marker);
+    });
+    
+    document.getElementById('loading').style.display = 'none';
+  } catch(err) {
+    console.error('Error loading cities:', err);
+    alert('Şehirler yüklenirken hata oluştu');
+  }
+}
+
+// Show Istanbul details on map
+async function showIstanbulDetails() {
+  showingDetails = true;
+  map.setView([41.0082, 28.9784], 11);
+  
+  loadMapData(currentTimeframe);
+}
+
+// Add satellite imagery layer - Gerçek uydu görüntüsü
+function addSatelliteLayer() {
+  // Eski layer'ı kaldır
+  if(satelliteLayer) {
+    map.removeLayer(satelliteLayer);
+  }
+  
+  // Esri World Imagery - ücretsiz, gerçek uydu görüntüleri
+  satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+    maxZoom: 19,
+    minZoom: 1
+  }).addTo(map);
+  
+  console.log('✅ Satellite imagery layer added');
+}
+
+// Load Istanbul district data
+async function loadMapData(timeframe, animate = true) {
+  try {
+    const r = await fetch(`/api/map/istanbul/${timeframe}`, {
+      headers: {Authorization: `Bearer ${token}`}
+    });
+    
+    if(!r.ok) throw new Error('Failed to load map data');
+    
+    const data = await r.json();
+    currentData = data;
+    
+    // Clear existing layers
+    detailMarkers.forEach(m => map.removeLayer(m));
+    detailMarkers = [];
+    if(heatmapLayer) {
+      map.removeLayer(heatmapLayer);
+      heatmapLayer = null;
+    }
+    
+    // Hide city markers when showing details
+    cityMarkers.forEach(m => m.setStyle({opacity: 0.2, fillOpacity: 0.1}));
+    
+    // Calculate averages
+    let totalGreen = 0, totalGrey = 0, totalWater = 0;
+    const count = data.features.length;
+    
+    // Process data and calculate totals
+    data.features.forEach(feature => {
+      const props = feature.properties;
+      totalGreen += props.green;
+      totalGrey += props.grey;
+      totalWater += props.water;
+    });
+    
+    // Render based on view mode
+    if(currentViewMode === 'markers') {
+      renderMarkers(data, animate);
+    } else {
+      renderHeatmap(data);
+    }
+    
+    // Update averages
+    document.getElementById('avg-green').textContent = Math.round(totalGreen / count) + '%';
+    document.getElementById('avg-grey').textContent = Math.round(totalGrey / count) + '%';
+    document.getElementById('avg-water').textContent = Math.round(totalWater / count) + '%';
+    
+    // Hide loading
+    document.getElementById('loading').style.display = 'none';
+    
+  } catch(err) {
+    console.error('Error loading map:', err);
+    alert('Harita yüklenirken hata oluştu');
+  }
+}
+
+// Render markers
+function renderMarkers(data, animate = true) {
+  data.features.forEach((feature, index) => {
+    const props = feature.properties;
+    const coords = feature.geometry.coordinates;
+    
+    // Create custom icon based on green percentage
+    const greenPercent = props.green;
+    let markerColor = greenPercent > 40 ? '#10b981' : greenPercent > 25 ? '#f59e0b' : '#ef4444';
+    
+    const marker = L.circleMarker([coords[1], coords[0]], {
+      radius: animate ? 0 : 15,
+      fillColor: markerColor,
+      color: 'white',
+      weight: 3,
+      opacity: animate ? 0 : 1,
+      fillOpacity: animate ? 0 : 0.8
+    }).addTo(map);
+    
+    // Animate marker appearance
+    if(animate) {
+      setTimeout(() => {
+        marker.setStyle({
+          radius: 15,
+          opacity: 1,
+          fillOpacity: 0.8
+        });
+      }, index * 50);
+    }
+    
+    // Create popup
+    const popupContent = `
+      <div class="popup-title">${props.name}</div>
+      <div class="popup-stats">
+        <div class="popup-stat">
+          <span class="popup-stat-label">🌳 Yeşil Alan</span>
+          <span class="popup-stat-value">${props.green}%</span>
+        </div>
+        <div class="popup-stat">
+          <span class="popup-stat-label">🏢 Beton</span>
+          <span class="popup-stat-value">${props.grey}%</span>
+        </div>
+        <div class="popup-stat">
+          <span class="popup-stat-label">💧 Su</span>
+          <span class="popup-stat-value">${props.water}%</span>
+        </div>
+      </div>
+    `;
+    
+    marker.bindPopup(popupContent);
+    detailMarkers.push(marker);
+  });
+}
+
+// Render heatmap
+function renderHeatmap(data) {
+  const heatData = [];
+  
+  data.features.forEach(feature => {
+    const props = feature.properties;
+    const coords = feature.geometry.coordinates;
+    
+    // Use inverse of green (more grey = more heat)
+    const intensity = (100 - props.green) / 100;
+    heatData.push([coords[1], coords[0], intensity]);
+  });
+  
+  heatmapLayer = L.heatLayer(heatData, {
+    radius: 50,
+    blur: 40,
+    maxZoom: 11,
+    max: 1.0,
+    gradient: {
+      0.0: '#10b981',
+      0.3: '#22c55e',
+      0.5: '#f59e0b',
+      0.7: '#ef4444',
+      1.0: '#dc2626'
+    }
+  }).addTo(map);
+}
+
+// View mode buttons (marker/heatmap)
+document.querySelectorAll('.view-btn[data-mode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    // Update active state
+    document.querySelectorAll('.view-btn[data-mode]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    // Update mode and reload
+    currentViewMode = btn.dataset.mode;
+    if(currentData) {
+      // Clear current view
+      detailMarkers.forEach(m => map.removeLayer(m));
+      detailMarkers = [];
+      if(heatmapLayer) {
+        map.removeLayer(heatmapLayer);
+        heatmapLayer = null;
+      }
+      
+      // Render new view
+      if(currentViewMode === 'markers') {
+        renderMarkers(currentData, true);
+      } else {
+        renderHeatmap(currentData);
+      }
+    }
+  });
+});
+
+// Satellite toggle button
+let satelliteEnabled = false;
+const satelliteToggle = document.getElementById('satellite-toggle');
+
+satelliteToggle.addEventListener('click', () => {
+  satelliteEnabled = !satelliteEnabled;
+  
+  if (satelliteEnabled) {
+    satelliteToggle.innerHTML = '<span>�️ Uydu Görünümü (Açık)</span>';
+    satelliteToggle.classList.add('active');
+    
+    // Uydu katmanını ekle (sadece İstanbul detaylarındaysa)
+    addSatelliteLayer();
+  } else {
+    satelliteToggle.innerHTML = '<span>�️ Normal Harita</span>';
+    satelliteToggle.classList.remove('active');
+    
+    // Uydu katmanını kaldır
+    if (satelliteLayer) {
+      map.removeLayer(satelliteLayer);
+      satelliteLayer = null;
+    }
+  }
+});
+
+// Timeframe buttons
+document.querySelectorAll('.timeframe-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    // Update active state
+    document.querySelectorAll('.timeframe-btn').forEach(b => {
+      b.classList.remove('active');
+      b.querySelector('.icon').textContent = '';
+    });
+    btn.classList.add('active');
+    btn.querySelector('.icon').textContent = '✓';
+    
+    // Load new data
+    currentTimeframe = btn.dataset.time;
+    
+    // Veriyi yeniden yükle
+    if(showingDetails) {
+      loadMapData(currentTimeframe);
+    }
+  });
+});
+
+// Back to Turkey button
+const backControl = L.control({position: 'topleft'});
+backControl.onAdd = function() {
+  const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+  div.innerHTML = '<button id="back-to-turkey" style="display:none;padding:12px 20px;background:white;border:none;color:#0284c7;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.15)">← Türkiye Haritası</button>';
+  return div;
+};
+backControl.addTo(map);
+
+document.addEventListener('click', (e) => {
+  if(e.target && e.target.id === 'back-to-turkey') {
+    showingDetails = false;
+    map.setView([39.0, 35.0], 6.2);
+    
+    // Clear all layers
+    detailMarkers.forEach(m => map.removeLayer(m));
+    detailMarkers = [];
+    if(heatmapLayer) {
+      map.removeLayer(heatmapLayer);
+      heatmapLayer = null;
+    }
+    if(satelliteLayer) {
+      map.removeLayer(satelliteLayer);
+      satelliteLayer = null;
+    }
+    
+    // Show city markers again
+    cityMarkers.forEach(m => m.setStyle({opacity: 1, fillOpacity: m.options.fillColor === '#10b981' ? 0.9 : 0.5}));
+    document.getElementById('back-to-turkey').style.display = 'none';
+    
+    // Reset info panel
+    document.getElementById('avg-green').textContent = '-';
+    document.getElementById('avg-grey').textContent = '-';
+    document.getElementById('avg-water').textContent = '-';
+  }
+});
+
+// Update showIstanbulDetails to show back button
+const originalShowDetails = showIstanbulDetails;
+showIstanbulDetails = async function() {
+  await originalShowDetails();
+  document.getElementById('back-to-turkey').style.display = 'block';
+};
+
+// Initial load - show Turkey cities
+loadTurkeyCities();
+</script>
+</body>
+</html>

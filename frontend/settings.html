@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="stylesheet" href="/styles.css"/>
+<title>Ayarlar — Greygreen</title>
+
+<!-- 
+  ============================================================================
+  AYARLAR SAYFASI
+  ============================================================================
+  
+  Açıklama:
+    Kullanıcı profili, dil, tema ve sistem ayarlarının yapılandırıldığı sayfa.
+  
+  Özellikler:
+    - Profil düzenleme (isim, email, şifre değiştirme)
+    - Dil seçimi (Türkçe/İngilizce)
+    - Tema seçimi (Light/Dark/Auto)
+    - Bildirim tercihleri
+    - Gizlilik ayarları
+    - Hesap silme
+  
+  ============================================================================
+-->
+
+<!-- Ortak CSS -->
+<link rel="stylesheet" href="/css/common.css">
+<!-- Settings'a Özel CSS -->
+<link rel="stylesheet" href="/css/settings.css">
+</head>
+<body>
+
+<!-- Top Bar -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="sidebar-toggle" id="sidebar-toggle" title="Sidebar Aç/Kapat">☰</button>
+    <div class="topbar-brand" onclick="location.href='/dashboard.html'">🌍 Grey vs Green Atlas</div>
+  </div>
+  <div class="topbar-right">
+    <button class="topbar-btn">🔔 <span>3</span></button>
+    <div class="topbar-user">
+      <span>👤</span>
+      <span id="who">Yükleniyor...</span>
+    </div>
+    <button class="topbar-logout" id="logout">
+      <span>🚪</span>
+      <span>Çıkış</span>
+    </button>
+  </div>
+</header>
+
+<!-- Layout -->
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-resizer" id="sidebar-resizer"></div>
+    
+    <!-- Ana Menü -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Ana Menü</div>
+      <nav class="nav">
+        <a href="/dashboard.html">
+          <span>📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/map.html">
+          <span>🗺️</span>
+          <span>Harita</span>
+        </a>
+        <a href="/istanbul-detail.html">
+          <span>🔬</span>
+          <span>İstanbul Detay</span>
+        </a>
+      </nav>
+    </div>
+    
+    <!-- Veri Yönetimi -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Veri Yönetimi</div>
+      <nav class="nav">
+        <a href="/data-sources.html">
+          <span>🛰️</span>
+          <span>Veri Kaynakları</span>
+        </a>
+        <a href="/data-upload.html">
+          <span>📤</span>
+          <span>Veri Setleri</span>
+        </a>
+        <a href="/reports.html">
+          <span>🧾</span>
+          <span>Raporlar</span>
+        </a>
+      </nav>
+    </div>
+    
+    <!-- Sistem -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Sistem</div>
+      <nav class="nav">
+        <a href="/settings.html" class="active">
+          <span>⚙️</span>
+          <span>Ayarlar</span>
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="header">
+      <h1>⚙️ Ayarlar</h1>
+      <p>Profil, dil ve sistem ayarlarınızı yönetin</p>
+    </div>
+
+    <div class="settings-grid">
+      
+      <!-- Profil Ayarları -->
+      <div class="setting-card">
+        <div class="setting-header">
+          <div class="setting-icon">👤</div>
+          <div>
+            <div class="setting-title">Profil Bilgileri</div>
+            <div class="setting-desc">Kişisel bilgilerinizi düzenleyin</div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Ad Soyad</label>
+          <input type="text" class="form-input" id="fullname" placeholder="Adınız Soyadınız"/>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">E-posta</label>
+          <input type="email" class="form-input" id="email" placeholder="email@example.com" disabled/>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Yeni Şifre (Opsiyonel)</label>
+          <input type="password" class="form-input" id="new-password" placeholder="Yeni şifreniz"/>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Yeni Şifre (Tekrar)</label>
+          <input type="password" class="form-input" id="confirm-password" placeholder="Şifrenizi tekrar girin"/>
+        </div>
+        
+        <div class="btn-group">
+          <button class="btn btn-primary" id="save-profile">💾 Profili Kaydet</button>
+          <button class="btn btn-secondary" id="cancel-profile">✕ İptal</button>
+        </div>
+      </div>
+
+      <!-- Dil Ayarları -->
+      <div class="setting-card">
+        <div class="setting-header">
+          <div class="setting-icon">🌐</div>
+          <div>
+            <div class="setting-title">Dil Seçimi</div>
+            <div class="setting-desc">Uygulama dilini değiştirin</div>
+          </div>
+        </div>
+        
+        <div class="radio-group">
+          <div class="radio-option">
+            <input type="radio" name="language" id="lang-tr" value="tr" checked/>
+            <label for="lang-tr" class="radio-label">
+              <div class="radio-icon">🇹🇷</div>
+              <div class="radio-text">Türkçe</div>
+            </label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" name="language" id="lang-en" value="en"/>
+            <label for="lang-en" class="radio-label">
+              <div class="radio-icon">🇬🇧</div>
+              <div class="radio-text">English</div>
+            </label>
+          </div>
+        </div>
+        
+        <div class="btn-group">
+          <button class="btn btn-primary" id="save-language">💾 Dili Kaydet</button>
+        </div>
+      </div>
+
+      <!-- Tema Ayarları -->
+      <div class="setting-card">
+        <div class="setting-header">
+          <div class="setting-icon">🎨</div>
+          <div>
+            <div class="setting-title">Tema</div>
+            <div class="setting-desc">Görünüm modunu seçin</div>
+          </div>
+        </div>
+        
+        <div class="radio-group">
+          <div class="radio-option">
+            <input type="radio" name="theme" id="theme-light" value="light" checked/>
+            <label for="theme-light" class="radio-label">
+              <div class="radio-icon">☀️</div>
+              <div class="radio-text">Açık Tema</div>
+            </label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" name="theme" id="theme-dark" value="dark"/>
+            <label for="theme-dark" class="radio-label">
+              <div class="radio-icon">🌙</div>
+              <div class="radio-text">Koyu Tema</div>
+            </label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" name="theme" id="theme-auto" value="auto"/>
+            <label for="theme-auto" class="radio-label">
+              <div class="radio-icon">🔄</div>
+              <div class="radio-text">Otomatik</div>
+            </label>
+          </div>
+        </div>
+        
+        <div class="btn-group">
+          <button class="btn btn-primary" id="save-theme">💾 Temayı Kaydet</button>
+        </div>
+      </div>
+
+      <!-- Bildirim Ayarları -->
+      <div class="setting-card">
+        <div class="setting-header">
+          <div class="setting-icon">🔔</div>
+          <div>
+            <div class="setting-title">Bildirimler</div>
+            <div class="setting-desc">Bildirim tercihlerinizi yönetin</div>
+          </div>
+        </div>
+        
+        <div class="toggle-group">
+          <div class="toggle-label">E-posta Bildirimleri</div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="email-notifications" checked/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        
+        <div class="toggle-group">
+          <div class="toggle-label">Tarayıcı Bildirimleri</div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="browser-notifications" checked/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        
+        <div class="toggle-group">
+          <div class="toggle-label">Haftalık Rapor E-postası</div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="weekly-report"/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        
+        <div class="toggle-group">
+          <div class="toggle-label">Veri Güncelleme Bildirimleri</div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="data-updates" checked/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        
+        <div class="btn-group">
+          <button class="btn btn-primary" id="save-notifications">💾 Tercihleri Kaydet</button>
+        </div>
+      </div>
+
+      <!-- Gizlilik & Güvenlik -->
+      <div class="setting-card">
+        <div class="setting-header">
+          <div class="setting-icon">🔒</div>
+          <div>
+            <div class="setting-title">Gizlilik & Güvenlik</div>
+            <div class="setting-desc">Hesap güvenliği ve gizlilik ayarları</div>
+          </div>
+        </div>
+        
+        <div class="toggle-group">
+          <div class="toggle-label">İki Faktörlü Doğrulama (2FA)</div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="two-factor"/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        
+        <div class="toggle-group">
+          <div class="toggle-label">Profil Gizliliği</div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="profile-privacy" checked/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        
+        <div class="toggle-group">
+          <div class="toggle-label">Aktivite Geçmişi</div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="activity-log" checked/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        
+        <div class="btn-group">
+          <button class="btn btn-primary" id="save-privacy">💾 Ayarları Kaydet</button>
+        </div>
+      </div>
+
+      <!-- Tehlikeli Bölge - Hesap Silme -->
+      <div class="setting-card">
+        <div class="setting-header">
+          <div class="setting-icon">⚠️</div>
+          <div>
+            <div class="setting-title">Tehlikeli Bölge</div>
+            <div class="setting-desc">Geri alınamaz işlemler</div>
+          </div>
+        </div>
+        
+        <div class="alert alert-danger">
+          <span>⚠️</span>
+          <span>Hesabınızı sildiğinizde tüm verileriniz kalıcı olarak silinecektir. Bu işlem geri alınamaz!</span>
+        </div>
+        
+        <div class="btn-group">
+          <button class="btn btn-danger" id="delete-account">🗑️ Hesabı Kalıcı Olarak Sil</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+// ============================================================================
+// KİMLİK DOĞRULAMA (Authentication)
+// ============================================================================
+
+const token = localStorage.getItem('token');
+if (!token) {
+  location.href = '/';
+}
+
+/**
+ * Kullanıcı bilgilerini getir ve göster
+ */
+async function whoami() {
+  try {
+    const response = await fetch('/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    if (!response.ok) {
+      localStorage.removeItem('token');
+      location.href = '/';
+      return;
+    }
+    
+    const user = await response.json();
+    document.getElementById('who').textContent = user.email;
+    document.getElementById('email').value = user.email;
+    document.getElementById('fullname').value = user.full_name || '';
+  } catch (error) {
+    console.error('Kullanıcı bilgisi alınamadı:', error);
+    location.href = '/';
+  }
+}
+
+whoami();
+
+
+// ============================================================================
+// ÇIKIŞ İŞLEMİ (Logout)
+// ============================================================================
+
+document.getElementById('logout').onclick = () => {
+  localStorage.removeItem('token');
+  location.href = '/';
+};
+
+
+// ============================================================================
+// SIDEBAR İŞLEVLERİ (Sidebar Functions)
+// ============================================================================
+
+const sidebarToggle = document.getElementById('sidebar-toggle');
+const sidebar = document.getElementById('sidebar');
+let isCollapsed = false;
+
+sidebarToggle.onclick = () => {
+  isCollapsed = !isCollapsed;
+  sidebar.classList.toggle('collapsed', isCollapsed);
+  sidebarToggle.textContent = isCollapsed ? '☰' : '✕';
+  sidebarToggle.title = isCollapsed ? 'Sidebar Aç' : 'Sidebar Kapat';
+};
+
+const resizer = document.getElementById('sidebar-resizer');
+let isResizing = false;
+let startX = 0;
+let startWidth = 0;
+
+resizer.addEventListener('mousedown', (e) => {
+  isResizing = true;
+  startX = e.clientX;
+  startWidth = sidebar.offsetWidth;
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!isResizing) return;
+  const diff = e.clientX - startX;
+  const newWidth = Math.max(250, Math.min(600, startWidth + diff));
+  sidebar.style.width = newWidth + 'px';
+  document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
+});
+
+document.addEventListener('mouseup', () => {
+  if (!isResizing) return;
+  isResizing = false;
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+});
+
+
+// ============================================================================
+// PROFİL AYARLARI (Profile Settings)
+// ============================================================================
+
+/**
+ * Profil bilgilerini kaydet
+ */
+document.getElementById('save-profile').onclick = async () => {
+  const fullname = document.getElementById('fullname').value;
+  const newPassword = document.getElementById('new-password').value;
+  const confirmPassword = document.getElementById('confirm-password').value;
+  
+  // Şifre kontrolü
+  if (newPassword && newPassword !== confirmPassword) {
+    alert('❌ Şifreler eşleşmiyor!');
+    return;
+  }
+  
+  // Simüle edilmiş kaydetme
+  alert('✅ Profil bilgileri kaydedildi!\n\n' + 
+        `Ad Soyad: ${fullname}\n` +
+        (newPassword ? 'Şifre güncellendi' : 'Şifre değiştirilmedi'));
+  
+  // Şifre alanlarını temizle
+  document.getElementById('new-password').value = '';
+  document.getElementById('confirm-password').value = '';
+  
+  // TODO: Backend API çağrısı
+  // await fetch('/api/profile', { method: 'PATCH', ... });
+};
+
+/**
+ * İptal butonu
+ */
+document.getElementById('cancel-profile').onclick = () => {
+  document.getElementById('new-password').value = '';
+  document.getElementById('confirm-password').value = '';
+  whoami(); // Orijinal değerleri yükle
+};
+
+
+// ============================================================================
+// DİL AYARLARI (Language Settings)
+// ============================================================================
+
+/**
+ * Dil seçimini kaydet
+ */
+document.getElementById('save-language').onclick = () => {
+  const selectedLang = document.querySelector('input[name="language"]:checked').value;
+  const langName = selectedLang === 'tr' ? 'Türkçe' : 'English';
+  
+  alert(`✅ Dil değiştirildi: ${langName}\n\nSayfa yeniden yüklenecek...`);
+  
+  // LocalStorage'a kaydet
+  localStorage.setItem('language', selectedLang);
+  
+  // TODO: Sayfayı yeniden yükle ve çevirileri uygula
+  // location.reload();
+};
+
+
+// ============================================================================
+// TEMA AYARLARI (Theme Settings)
+// ============================================================================
+
+/**
+ * Tema seçimini kaydet
+ */
+document.getElementById('save-theme').onclick = () => {
+  const selectedTheme = document.querySelector('input[name="theme"]:checked').value;
+  const themeNames = {
+    'light': 'Açık Tema',
+    'dark': 'Koyu Tema',
+    'auto': 'Otomatik'
+  };
+  
+  alert(`✅ Tema değiştirildi: ${themeNames[selectedTheme]}\n\nDeğişiklikler uygulanacak...`);
+  
+  // LocalStorage'a kaydet
+  localStorage.setItem('theme', selectedTheme);
+  
+  // TODO: Tema değişikliklerini uygula
+  // applyTheme(selectedTheme);
+};
+
+
+// ============================================================================
+// BİLDİRİM AYARLARI (Notification Settings)
+// ============================================================================
+
+/**
+ * Bildirim tercihlerini kaydet
+ */
+document.getElementById('save-notifications').onclick = () => {
+  const emailNotif = document.getElementById('email-notifications').checked;
+  const browserNotif = document.getElementById('browser-notifications').checked;
+  const weeklyReport = document.getElementById('weekly-report').checked;
+  const dataUpdates = document.getElementById('data-updates').checked;
+  
+  alert('✅ Bildirim tercihleri kaydedildi!\n\n' +
+        `E-posta: ${emailNotif ? 'Açık' : 'Kapalı'}\n` +
+        `Tarayıcı: ${browserNotif ? 'Açık' : 'Kapalı'}\n` +
+        `Haftalık Rapor: ${weeklyReport ? 'Açık' : 'Kapalı'}\n` +
+        `Veri Güncellemeleri: ${dataUpdates ? 'Açık' : 'Kapalı'}`);
+  
+  // TODO: Backend API çağrısı
+  // await fetch('/api/notifications', { method: 'PATCH', ... });
+};
+
+
+// ============================================================================
+// GİZLİLİK AYARLARI (Privacy Settings)
+// ============================================================================
+
+/**
+ * Gizlilik ayarlarını kaydet
+ */
+document.getElementById('save-privacy').onclick = () => {
+  const twoFactor = document.getElementById('two-factor').checked;
+  const profilePrivacy = document.getElementById('profile-privacy').checked;
+  const activityLog = document.getElementById('activity-log').checked;
+  
+  alert('✅ Gizlilik ayarları kaydedildi!\n\n' +
+        `İki Faktörlü Doğrulama: ${twoFactor ? 'Açık' : 'Kapalı'}\n` +
+        `Profil Gizliliği: ${profilePrivacy ? 'Açık' : 'Kapalı'}\n` +
+        `Aktivite Geçmişi: ${activityLog ? 'Açık' : 'Kapalı'}`);
+  
+  // TODO: Backend API çağrısı
+  // await fetch('/api/privacy', { method: 'PATCH', ... });
+};
+
+
+// ============================================================================
+// HESAP SİLME (Delete Account)
+// ============================================================================
+
+/**
+ * Hesap silme işlemi
+ */
+document.getElementById('delete-account').onclick = () => {
+  const confirmation = confirm(
+    '⚠️ UYARI: HESABINIZI SİLMEK ÜZEREYİZ!\n\n' +
+    'Bu işlem geri alınamaz ve tüm verileriniz kalıcı olarak silinecektir.\n\n' +
+    'Hesabınızı silmek istediğinizden emin misiniz?'
+  );
+  
+  if (!confirmation) {
+    return;
+  }
+  
+  const finalConfirmation = prompt(
+    'Son onay: Hesabınızı silmek için "SİL" yazın (büyük harflerle):'
+  );
+  
+  if (finalConfirmation === 'SİL') {
+    alert('❌ Hesabınız siliniyor...\n\nOturum kapatılacak ve ana sayfaya yönlendirileceksiniz.');
+    
+    // TODO: Backend API çağrısı
+    // await fetch('/api/account', { method: 'DELETE', ... });
+    
+    // Logout
+    localStorage.removeItem('token');
+    location.href = '/';
+  } else {
+    alert('✅ İşlem iptal edildi. Hesabınız güvende!');
+  }
+};
+
+</script>
+</body>
+</html>

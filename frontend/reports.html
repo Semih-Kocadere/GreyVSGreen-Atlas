@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Raporlar — Greygreen</title>
+<!-- Ortak CSS -->
+<link rel="stylesheet" href="/css/common.css">
+<!-- Reports'a Özel CSS -->
+<link rel="stylesheet" href="/css/reports.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
+    <div class="topbar-brand" onclick="location.href='/dashboard.html'">🌍 Grey vs Green Atlas</div>
+  </div>
+  <div class="topbar-right">
+    <button class="topbar-btn">🔔 <span>3</span></button>
+    <div class="topbar-user">
+      <span>👤</span>
+      <span id="who">Yükleniyor...</span>
+    </div>
+    <button class="topbar-logout" id="logout">
+      <span>🚪</span>
+      <span>Çıkış</span>
+    </button>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-resizer" id="sidebar-resizer"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Ana Menü</div>
+      <nav class="nav">
+        <a href="/dashboard.html"><span>📊</span><span>Dashboard</span></a>
+        <a href="/map.html"><span>🗺️</span><span>Harita</span></a>
+        <a href="/istanbul-detail.html"><span>🔬</span><span>İstanbul Detay</span></a>
+      </nav>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Veri Yönetimi</div>
+      <nav class="nav">
+        <a href="/data-sources.html"><span>🛰️</span><span>Veri Kaynakları</span></a>
+        <a href="/data-upload.html"><span>📤</span><span>Veri Setleri</span></a>
+        <a href="/reports.html" class="active"><span>🧾</span><span>Raporlar</span></a>
+      </nav>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Sistem</div>
+      <nav class="nav">
+        <a href="/settings.html"><span>⚙️</span><span>Ayarlar</span></a>
+      </nav>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="header">
+      <h1>🧾 Raporlar</h1>
+      <p>Analiz raporlarını oluşturun ve dışa aktarın</p>
+    </div>
+    <div class="reports-grid">
+      <div class="report-card">
+        <div class="report-icon">📊</div>
+        <div class="report-title">Haftalık Özet Raporu</div>
+        <div class="report-desc">Son 7 günün yeşil alan değişim raporu</div>
+        <div class="report-meta">
+          <div class="report-meta-item"><span>📅</span><span>Her Pazartesi</span></div>
+          <div class="report-meta-item"><span>📄</span><span>5 Sayfa</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary">📥 PDF İndir</button>
+          <button class="btn btn-secondary">📊 Excel</button>
+        </div>
+      </div>
+      <div class="report-card">
+        <div class="report-icon">📈</div>
+        <div class="report-title">Aylık Trend Analizi</div>
+        <div class="report-desc">Aylık yeşil/gri alan değişim trendi</div>
+        <div class="report-meta">
+          <div class="report-meta-item"><span>📅</span><span>Her Ay</span></div>
+          <div class="report-meta-item"><span>📄</span><span>12 Sayfa</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary">📥 PDF İndir</button>
+          <button class="btn btn-secondary">📊 Excel</button>
+        </div>
+      </div>
+      <div class="report-card">
+        <div class="report-icon">🏙️</div>
+        <div class="report-title">İlçe Karşılaştırma Raporu</div>
+        <div class="report-desc">39 ilçenin karşılaştırmalı analizi</div>
+        <div class="report-meta">
+          <div class="report-meta-item"><span>📅</span><span>Talep Üzerine</span></div>
+          <div class="report-meta-item"><span>📄</span><span>25 Sayfa</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary">📥 PDF İndir</button>
+          <button class="btn btn-secondary">📊 Excel</button>
+        </div>
+      </div>
+      <div class="report-card">
+        <div class="report-icon">📉</div>
+        <div class="report-title">Yıllık Değişim Raporu</div>
+        <div class="report-desc">2019-2024 yeşil alan kaybı analizi</div>
+        <div class="report-meta">
+          <div class="report-meta-item"><span>📅</span><span>Yılda 1</span></div>
+          <div class="report-meta-item"><span>📄</span><span>45 Sayfa</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary">📥 PDF İndir</button>
+          <button class="btn btn-secondary">📊 Excel</button>
+        </div>
+      </div>
+      <div class="report-card">
+        <div class="report-icon">🔮</div>
+        <div class="report-title">Tahmin Raporu</div>
+        <div class="report-desc">12 aylık yeşil alan projeksiyonu</div>
+        <div class="report-meta">
+          <div class="report-meta-item"><span>📅</span><span>3 Ayda 1</span></div>
+          <div class="report-meta-item"><span>📄</span><span>18 Sayfa</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary">📥 PDF İndir</button>
+          <button class="btn btn-secondary">📊 Excel</button>
+        </div>
+      </div>
+      <div class="report-card">
+        <div class="report-icon">🌳</div>
+        <div class="report-title">Park ve Yeşil Alan Envanteri</div>
+        <div class="report-desc">Tüm parkların detaylı listesi</div>
+        <div class="report-meta">
+          <div class="report-meta-item"><span>📅</span><span>6 Ayda 1</span></div>
+          <div class="report-meta-item"><span>📄</span><span>60 Sayfa</span></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary">📥 PDF İndir</button>
+          <button class="btn btn-secondary">📊 Excel</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+const token=localStorage.getItem('token');if(!token){location.href='/';}
+async function whoami(){try{const r=await fetch('/me',{headers:{Authorization:'Bearer '+token}});if(!r.ok){localStorage.removeItem('token');location.href='/';return;}const u=await r.json();document.getElementById('who').textContent=u.email;}catch(e){location.href='/';}}
+whoami();
+document.getElementById('logout').onclick=()=>{localStorage.removeItem('token');location.href='/';};
+const sidebarToggle=document.getElementById('sidebar-toggle');const sidebar=document.getElementById('sidebar');let isCollapsed=false;
+sidebarToggle.onclick=()=>{isCollapsed=!isCollapsed;sidebar.classList.toggle('collapsed',isCollapsed);sidebarToggle.textContent=isCollapsed?'☰':'✕';};
+const resizer=document.getElementById('sidebar-resizer');let isResizing=false;let startX=0;let startWidth=0;
+resizer.addEventListener('mousedown',(e)=>{isResizing=true;startX=e.clientX;startWidth=sidebar.offsetWidth;document.body.style.cursor='col-resize';document.body.style.userSelect='none';});
+document.addEventListener('mousemove',(e)=>{if(!isResizing)return;const diff=e.clientX-startX;const newWidth=Math.max(250,Math.min(600,startWidth+diff));sidebar.style.width=newWidth+'px';});
+document.addEventListener('mouseup',()=>{if(!isResizing)return;isResizing=false;document.body.style.cursor='';document.body.style.userSelect='';});
+document.querySelectorAll('.btn-primary').forEach(btn=>{btn.onclick=function(){alert('Rapor indiriliyor...\n\nGerçek uygulamada PDF dosyası oluşturulacak.');};});
+document.querySelectorAll('.btn-secondary').forEach(btn=>{btn.onclick=function(){alert('Excel raporu oluşturuluyor...\n\nGerçek uygulamada Excel dosyası indirilecek.');};});
+</script>
+</body>
+</html>

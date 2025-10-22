@@ -1,0 +1,241 @@
+/* ============================================================================
+   AYARLAR SAYFASI - ÖZEL STİLLER
+   ============================================================================
+   
+   Bu dosya sadece settings.html için özel stilleri içerir.
+   Ortak stiller common.css'de tanımlıdır.
+   
+   ============================================================================
+*/
+
+/* Ana İçerik */
+.content {
+  padding: 48px;
+}
+
+.content h1 {
+  font-size: 52px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ffffff, rgba(255,255,255,0.7));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -2px;
+  margin-bottom: 12px;
+}
+
+.content > p {
+  font-size: 18px;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 40px;
+}
+
+/* Ayar Bölümleri */
+.settings-grid {
+  display: grid;
+  gap: 32px;
+  max-width: 900px;
+}
+
+.settings-section {
+  background: rgba(255,255,255,0.98);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  border: 2px solid rgba(255,255,255,0.2);
+}
+
+.settings-section h2 {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Form Elemanları */
+.form-group {
+  margin-bottom: 28px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 2px solid rgba(2,132,199,0.2);
+  background: rgba(2,132,199,0.05);
+  font-size: 16px;
+  font-family: inherit;
+  transition: all 0.3s;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--accent-solid);
+  box-shadow: 0 0 0 4px rgba(2,132,199,0.1);
+}
+
+.form-hint {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+}
+
+/* Toggle Switch */
+.toggle-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: rgba(2,132,199,0.05);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border: 2px solid rgba(2,132,199,0.1);
+}
+
+.toggle-group:hover {
+  background: rgba(2,132,199,0.08);
+  border-color: rgba(2,132,199,0.2);
+}
+
+.toggle-info {
+  flex: 1;
+}
+
+.toggle-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.toggle-description {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.toggle-switch {
+  position: relative;
+  width: 56px;
+  height: 32px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.toggle-switch.active {
+  background: var(--accent-gradient);
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.toggle-switch.active::after {
+  left: 28px;
+}
+
+/* Butonlar */
+.settings-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.settings-btn {
+  padding: 16px 32px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-btn-primary {
+  background: var(--accent-gradient);
+  color: white;
+  box-shadow: 0 4px 16px rgba(2,132,199,0.3);
+}
+
+.settings-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(2,132,199,0.5);
+}
+
+.settings-btn-secondary {
+  background: rgba(0,0,0,0.05);
+  color: var(--text-primary);
+  border: 2px solid rgba(0,0,0,0.1);
+}
+
+.settings-btn-secondary:hover {
+  background: rgba(0,0,0,0.08);
+  border-color: rgba(0,0,0,0.2);
+}
+
+.settings-btn-danger {
+  background: rgba(239,68,68,0.1);
+  color: #dc2626;
+  border: 2px solid rgba(239,68,68,0.3);
+}
+
+.settings-btn-danger:hover {
+  background: #dc2626;
+  color: white;
+  border-color: #dc2626;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .content {
+    padding: 32px 24px;
+  }
+  
+  .content h1 {
+    font-size: 36px;
+  }
+  
+  .settings-section {
+    padding: 28px;
+  }
+  
+  .settings-actions {
+    flex-direction: column;
+  }
+  
+  .settings-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Dashboard — Greygreen</title>
+
+<!-- 
+  ============================================================================
+  GREY VS GREEN ATLAS - ANA DASHBOARD
+  ============================================================================
+  
+  Açıklama:
+    Kullanıcıların giriş yaptıktan sonra yönlendirildiği ana sayfa.
+    Şehirlerin yeşil/gri alan özetlerini gösterir.
+    Sadece İstanbul için detaylı analiz aktif.
+  
+  Özellikler:
+    - Üst menü çubuğu (kullanıcı bilgisi, çıkış, arama)
+    - Yan panel (sidebar): menü ve özet istatistikler
+    - Sidebar açılıp kapanabilir ve sürüklenip genişletilebilir
+    - İstanbul kartında "Detaylı Analiz" butonu
+    - Diğer şehirler pasif ("Yakında Aktif")
+  
+  Navigasyon:
+    - Haritalar → map.html
+    - İstanbul Detaylı Analiz → istanbul-detail.html
+  
+  API Çağrıları:
+    - GET /me → Kullanıcı bilgisi
+    - GET /api/city/istanbul → İstanbul özet verileri
+    - POST /auth/login → Oturum açma (redirect için)
+  
+  ============================================================================
+-->
+
+<!-- Ortak CSS -->
+<link rel="stylesheet" href="/css/common.css">
+<!-- Dashboard'a Özel CSS -->
+<link rel="stylesheet" href="/css/dashboard.css">
+
+</head>
+<body>
+<!-- Top Bar -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="sidebar-toggle" id="sidebar-toggle" title="Sidebar Aç/Kapat">☰</button>
+    <div class="topbar-brand" style="cursor:default">🌍 Grey vs Green Atlas</div>
+    <div class="topbar-search">
+      <input type="text" placeholder="Şehir veya analiz ara..."/>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="topbar-btn">🔔 <span>3</span></button>
+    <div class="topbar-user">
+      <span>👤</span>
+      <span id="who">Yükleniyor...</span>
+    </div>
+    <button class="topbar-logout" id="logout">
+      <span>🚪</span>
+      <span>Çıkış</span>
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-resizer" id="sidebar-resizer"></div>
+    <!-- Ana Menü -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Ana Menü</div>
+      <nav class="nav">
+        <a href="/dashboard.html" id="nav-dashboard" class="active">
+          <span>📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/map.html" id="nav-map">
+          <span>🗺️</span>
+          <span>Harita</span>
+        </a>
+        <a href="/istanbul-detail.html" id="nav-istanbul">
+          <span>🔬</span>
+          <span>İstanbul Detay</span>
+        </a>
+      </nav>
+    </div>
+    
+    <!-- Veri Yönetimi -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Veri Yönetimi</div>
+      <nav class="nav">
+        <a href="/data-sources.html" id="nav-data-sources">
+          <span>🛰️</span>
+          <span>Veri Kaynakları</span>
+        </a>
+        <a href="/data-upload.html" id="nav-data-upload">
+          <span>📤</span>
+          <span>Veri Setleri</span>
+        </a>
+        <a href="/reports.html" id="nav-reports">
+          <span>🧾</span>
+          <span>Raporlar</span>
+        </a>
+      </nav>
+    </div>
+    
+    <!-- Sistem -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Sistem</div>
+      <nav class="nav">
+        <a href="/settings.html" id="nav-settings">
+          <span>⚙️</span>
+          <span>Ayarlar</span>
+        </a>
+      </nav>
+    </div>
+    
+    <!-- Özet İstatistikler -->
+    <div class="sidebar-footer">
+      <div class="sidebar-title">Özet İstatistikler</div>
+      <div class="sidebar-stats">
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Toplam Şehir</span>
+          <span class="sidebar-stat-value">5</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Son Güncelleme</span>
+          <span class="sidebar-stat-value">Bugün</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Aktif Analiz</span>
+          <span class="sidebar-stat-value">1</span>
+        </div>
+      </div>
+      
+      <!-- Kullanıcı Kartı -->
+      <div class="sidebar-user-card" style="margin-top: 16px;">
+        <div class="user-avatar">👤</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-user-name">Yükleniyor...</div>
+          <div class="user-role">Admin</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  
+  <main class="main">
+    <div class="header">
+      <h1>Türkiye Geneli Arazi Kullanım Oranları</h1>
+      <p>Türkiye'nin büyük şehirlerinde yeşil alan ve beton değişimini takip edin</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+  <img src="/images/agac-resimleri-rooteto4.jpg" alt="Yeşil Alan" class="stat-icon">
+        <div class="stat-value">31.2%</div>
+        <div class="stat-label">Ortalama Yeşil Alan</div>
+      </div>
+      <div class="stat-card">
+  <img src="/images/R.jpg" alt="Beton Alan" class="stat-icon">
+        <div class="stat-value">61.4%</div>
+        <div class="stat-label">Ortalama Beton</div>
+      </div>
+      <div class="stat-card">
+  <img src="/images/OIP (1).webp" alt="Su Kaynakları" class="stat-icon">
+        <div class="stat-value">7.4%</div>
+        <div class="stat-label">Su Kaynakları</div>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card" data-city="istanbul">
+        <h3>İstanbul</h3>
+        <p>Türkiye'nin en büyük metropolü. Boğaz'ın iki yakasında yeşil alan ve beton değişimini keşfedin.</p>
+        <button class="btn btn-kpi" data-city="istanbul">
+          📊 Özet İstatistikler
+        </button>
+        <div class="button-grid">
+          <button class="btn btn-detail" onclick="location.href='/istanbul-detail.html'">
+            🔬 Detaylı Analiz
+          </button>
+          <button class="btn btn-trend" onclick="location.href='/trend-prediction.html'">
+            📈 Trend Tahmini
+          </button>
+        </div>
+        <div class="kpis" id="kpis-istanbul" style="display:none">
+          <div class="k">
+            <div class="muted">🌳 Yeşil</div>
+            <b class="k-value" id="k-green-istanbul">–</b>
+          </div>
+          <div class="k">
+            <div class="muted">🏢 Beton</div>
+            <b class="k-value" id="k-grey-istanbul">–</b>
+          </div>
+          <div class="k">
+            <div class="muted">💧 Su</div>
+            <b class="k-value" id="k-water-istanbul">–</b>
+          </div>
+        </div>
+        <div class="note" id="note-istanbul" style="display:none"></div>
+      </div>
+
+      <div class="card card-disabled" data-city="ankara">
+        <h3>Ankara</h3>
+        <p>Başkent Ankara'nın yeşil alan analizi yakında hazır olacak. Anıtkabir ve çevre yeşil alanların takibi.</p>
+        <button class="btn btn-disabled" disabled>Yakında Aktif</button>
+      </div>
+
+      <div class="card card-disabled" data-city="izmir">
+        <h3>İzmir</h3>
+        <p>Ege'nin incisi İzmir'in sahil şeridi ve kent içi yeşil alanların analizi çok yakında.</p>
+        <button class="btn btn-disabled" disabled>Yakında Aktif</button>
+      </div>
+
+      <div class="card card-disabled" data-city="bursa">
+        <h3>Bursa</h3>
+        <p>Yeşil Bursa'nın tarihi dokusu ve doğal güzellikleri yakında analiz edilecek.</p>
+        <button class="btn btn-disabled" disabled>Yakında Aktif</button>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+// ============================================================================
+// KİMLİK DOĞRULAMA (Authentication Check)
+// ============================================================================
+
+// LocalStorage'dan JWT token'ı al
+const token = localStorage.getItem('token');
+
+// Token yoksa login sayfasına yönlendir
+if (!token) {
+  location.href = '/';
+}
+
+/**
+ * Mevcut kullanıcının bilgilerini getir ve sayfada göster
+ * API: GET /me
+ */
+async function whoami() {
+  try {
+    const response = await fetch('/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    // Token geçersizse login'e yönlendir
+    if (!response.ok) {
+      localStorage.removeItem('token');
+      location.href = '/';
+      return;
+    }
+    
+    // Kullanıcı email'ini topbar'da göster
+    const user = await response.json();
+    document.getElementById('who').textContent = user.email;
+    
+    // Sidebar'daki kullanıcı bilgisini de güncelle
+    const sidebarUserName = document.getElementById('sidebar-user-name');
+    if (sidebarUserName) {
+      sidebarUserName.textContent = user.email;
+    }
+    
+  } catch (error) {
+    console.error('Kullanıcı bilgisi alınamadı:', error);
+    location.href = '/';
+  }
+}
+
+// Sayfa yüklenince kullanıcı bilgisini getir
+whoami();
+
+
+// ============================================================================
+// ÇIKIŞ İŞLEMİ (Logout)
+// ============================================================================
+
+/**
+ * Çıkış butonu tıklandığında token'ı sil ve login'e yönlendir
+ */
+document.getElementById('logout').onclick = () => {
+  localStorage.removeItem('token');
+  location.href = '/';
+};
+
+
+// ============================================================================
+// İSTANBUL VERİLERİNİ GÖSTER (Istanbul Data Display)
+// ============================================================================
+
+/**
+ * KPI butonları için genel toggle fonksiyonu
+ * Her şehir için bağımsız çalışır
+ */
+const kpiStates = {}; // Her şehir için ayrı state
+
+// Tüm KPI butonlarına event listener ekle
+document.querySelectorAll('.btn-kpi').forEach(btn => {
+  const cityName = btn.getAttribute('data-city');
+  kpiStates[cityName] = false; // Başlangıçta kapalı
+  
+  btn.onclick = async (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    
+    const card = event.target.closest('.card');
+    const kpisElement = document.getElementById(`kpis-${cityName}`);
+    const noteElement = document.getElementById(`note-${cityName}`);
+    
+    // Toggle: Eğer açıksa kapat, kapalıysa aç
+    if (kpiStates[cityName]) {
+      kpisElement.style.display = 'none';
+      noteElement.style.display = 'none';
+      card.classList.remove('kpi-expanded');
+      kpiStates[cityName] = false;
+      console.log(`${cityName} KPI kapatıldı`);
+      return;
+    }
+    
+    // KPI'yı aç - veriyi çek
+    console.log(`${cityName} KPI açılıyor...`);
+    try {
+      const response = await fetch(`/api/city/${cityName}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (!response.ok) {
+        alert('Veri alınamadı. Lütfen tekrar deneyin.');
+        return;
+      }
+      
+      const data = await response.json();
+      
+      // KPI kartlarını doldur
+      document.getElementById(`k-green-${cityName}`).textContent = data.now.green + '%';
+      document.getElementById(`k-grey-${cityName}`).textContent = data.now.grey + '%';
+      document.getElementById(`k-water-${cityName}`).textContent = data.now.water + '%';
+      
+      // Veri kaynağı notunu göster
+      if (noteElement) {
+        noteElement.textContent = data.note;
+        noteElement.style.display = 'block';
+      }
+      
+      // KPI kartlarını görünür yap
+      kpisElement.style.display = 'grid';
+      card.classList.add('kpi-expanded');
+      kpiStates[cityName] = true;
+      console.log(`${cityName} KPI açıldı`);
+      
+    } catch (error) {
+      console.error(`${cityName} verileri yüklenemedi:`, error);
+      alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+    }
+  };
+});
+
+
+// ============================================================================
+// SIDEBAR AÇ/KAPA (Sidebar Toggle)
+// ============================================================================
+
+const sidebarToggle = document.getElementById('sidebar-toggle');
+const sidebar = document.getElementById('sidebar');
+const mainContent = document.querySelector('.main');
+let isCollapsed = false;
+
+/**
+ * Sidebar toggle butonu tıklandığında yan paneli aç/kapat
+ * Buton ikonu ve tooltip'i de değişir (☰ ↔ ✕)
+ */
+sidebarToggle.onclick = () => {
+  isCollapsed = !isCollapsed;
+  
+  // 'collapsed' class'ını ekle/çıkar (CSS'de display:none)
+  sidebar.classList.toggle('collapsed', isCollapsed);
+  
+  // Main content'e de class ekle/çıkar
+  if (mainContent) {
+    mainContent.classList.toggle('sidebar-collapsed', isCollapsed);
+  }
+  
+  // Buton içeriğini değiştir
+  sidebarToggle.textContent = isCollapsed ? '☰' : '✕';
+  sidebarToggle.title = isCollapsed ? 'Sidebar Aç' : 'Sidebar Kapat';
+  
+  // Sidebar açıkken genişliği CSS değişkeninde sakla
+  if (!isCollapsed) {
+    document.documentElement.style.setProperty(
+      '--sidebar-width',
+      sidebar.offsetWidth + 'px'
+    );
+  }
+};
+
+
+// ============================================================================
+// SIDEBAR GENİŞLİK AYARI (Sidebar Resize)
+// ============================================================================
+
+const resizer = document.getElementById('sidebar-resizer');
+let isResizing = false;  // Şu an sürükleniyor mu?
+let startX = 0;          // Sürükleme başlangıç X koordinatı
+let startWidth = 0;      // Sürükleme başlangıç sidebar genişliği
+
+/**
+ * Resizer çubuğuna mousedown yapıldığında sürüklemeyi başlat
+ */
+resizer.addEventListener('mousedown', (e) => {
+  isResizing = true;
+  startX = e.clientX;
+  startWidth = sidebar.offsetWidth;
+  
+  // Görsel feedback: resizer ve cursor değişir
+  resizer.classList.add('resizing');
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';  // Metin seçimini engelle
+});
+
+/**
+ * Mouse hareket ederken sidebar genişliğini ayarla
+ * Min: 250px, Max: 600px
+ */
+document.addEventListener('mousemove', (e) => {
+  if (!isResizing) return;
+  
+  // Hareket mesafesini hesapla
+  const diff = e.clientX - startX;
+  
+  // Yeni genişlik: başlangıç + hareket (sınırlar içinde)
+  const newWidth = Math.max(250, Math.min(600, startWidth + diff));
+  
+  // Sidebar genişliğini güncelle
+  sidebar.style.width = newWidth + 'px';
+  document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
+});
+
+/**
+ * Mouse bırakıldığında sürüklemeyi bitir
+ */
+document.addEventListener('mouseup', () => {
+  if (!isResizing) return;
+  
+  isResizing = false;
+  resizer.classList.remove('resizing');
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+});
+
+
+// ============================================================================
+// BAŞLANGIÇ AYARLARI (Initialization)
+// ============================================================================
+
+// Sidebar'ın başlangıç genişliğini CSS değişkenine kaydet
+document.documentElement.style.setProperty(
+  '--sidebar-width',
+  sidebar.offsetWidth + 'px'
+);
+</script>
+</body>
+</html>

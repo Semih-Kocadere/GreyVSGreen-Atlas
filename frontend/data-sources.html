@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Veri Kaynakları — Greygreen</title>
+
+<!-- 
+  ============================================================================
+  VERİ KAYNAKLARI SAYFASI
+  ============================================================================
+  
+  Açıklama:
+    Projede kullanılan veri kaynaklarını listeler ve yönetir.
+    Uydu görüntüleri, açık veri portalları, sensör verileri gibi
+    farklı kaynaklardan gelen verilerin durumunu gösterir.
+  
+  Özellikler:
+    - Veri kaynağı kartları (aktif/pasif durumu)
+    - Son güncelleme zamanları
+    - Veri kalitesi göstergeleri
+    - Kaynak ekleme/düzenleme/silme işlemleri
+    - İstatistikler (toplam kayıt, veri boyutu)
+  
+  Veri Kaynakları:
+    1. Sentinel-2 (ESA Copernicus - 10m multispectral)
+    2. Landsat 8/9 (NASA/USGS - 30m historical)
+    3. Dynamic World (Google Earth Engine - 10m land-cover)
+    4. ESA WorldCover (ESA - 10m global land-cover)
+    5. İBB Açık Veri Portalı (Yerel veriler)
+  
+  ============================================================================
+-->
+
+<!-- Ortak CSS -->
+<link rel="stylesheet" href="/css/common.css">
+<!-- Data-sources'a Özel CSS -->
+<link rel="stylesheet" href="/css/data-sources.css">
+</head>
+<body>
+
+<!-- Top Bar -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="sidebar-toggle" id="sidebar-toggle" title="Sidebar Aç/Kapat">☰</button>
+    <div class="topbar-brand" onclick="location.href='/dashboard.html'">🌍 Grey vs Green Atlas</div>
+  </div>
+  <div class="topbar-right">
+    <button class="topbar-btn">🔔 <span>3</span></button>
+    <div class="topbar-user">
+      <span>👤</span>
+      <span id="who">Yükleniyor...</span>
+    </div>
+    <button class="topbar-logout" id="logout">
+      <span>🚪</span>
+      <span>Çıkış</span>
+    </button>
+  </div>
+</header>
+
+<!-- Layout -->
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-resizer" id="sidebar-resizer"></div>
+    
+    <!-- Ana Menü -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Ana Menü</div>
+      <nav class="nav">
+        <a href="/dashboard.html">
+          <span>📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/map.html">
+          <span>🗺️</span>
+          <span>Harita</span>
+        </a>
+        <a href="/istanbul-detail.html">
+          <span>🔬</span>
+          <span>İstanbul Detay</span>
+        </a>
+      </nav>
+    </div>
+    
+    <!-- Veri Yönetimi -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Veri Yönetimi</div>
+      <nav class="nav">
+        <a href="/data-sources.html" class="active">
+          <span>🛰️</span>
+          <span>Veri Kaynakları</span>
+        </a>
+        <a href="/data-upload.html">
+          <span>📤</span>
+          <span>Veri Setleri</span>
+        </a>
+        <a href="/reports.html">
+          <span>🧾</span>
+          <span>Raporlar</span>
+        </a>
+      </nav>
+    </div>
+    
+    <!-- Sistem -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Sistem</div>
+      <nav class="nav">
+        <a href="/settings.html">
+          <span>⚙️</span>
+          <span>Ayarlar</span>
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="header">
+      <h1>🌍 Veri Kaynakları</h1>
+      <p>Projede kullanılan veri kaynaklarını görüntüleyin ve yönetin</p>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="stats-overview">
+      <div class="stat-box">
+        <div class="stat-box-icon">🛰️</div>
+        <div class="stat-box-value">5</div>
+        <div class="stat-box-label">Veri Kaynağı</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-icon">✅</div>
+        <div class="stat-box-value">4</div>
+        <div class="stat-box-label">Aktif Kaynak</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-icon">💾</div>
+        <div class="stat-box-value">2.2 TB</div>
+        <div class="stat-box-label">Toplam Veri</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-icon">🔄</div>
+        <div class="stat-box-value">1</div>
+        <div class="stat-box-label">Senkronizasyon</div>
+      </div>
+    </div>
+
+    <!-- Sources Grid -->
+    <div class="sources-grid">
+      
+      <!-- Sentinel-2 -->
+      <div class="source-card" data-source="sentinel2">
+        <div class="source-status status-active">✓ Aktif</div>
+        <div class="source-header">
+          <div class="source-icon">🛰️</div>
+          <div class="source-info">
+            <div class="source-name">Sentinel-2 (ESA Copernicus)</div>
+            <div class="source-type">10m Multispectral Imagery</div>
+            <a href="https://scihub.copernicus.eu/" target="_blank" class="source-url" title="ESA Copernicus Data Hub">
+              🔗 scihub.copernicus.eu
+            </a>
+          </div>
+        </div>
+        <div class="source-description">
+          ESA Copernicus programı kapsamında <strong>10m çözünürlüklü</strong> çok bantlı uydu görüntüleri. 
+          <strong>NDVI (vejetasyon), NDWI (su), NDBI (yapılaşma)</strong> indekslerinin hesaplanması için temel kaynak. 
+          Yeşil alanlar, gri bölgeler ve su yüzeylerinin piksel düzeyinde ayrımında kullanılıyor.
+        </div>
+        <div class="source-stats">
+          <div class="source-stat">
+            <div class="source-stat-label">Son Güncelleme</div>
+            <div class="source-stat-value" data-field="lastUpdate">Yükleniyor...</div>
+          </div>
+          <div class="source-stat">
+            <div class="source-stat-label">Veri Boyutu</div>
+            <div class="source-stat-value" data-field="dataSize">Yükleniyor...</div>
+          </div>
+          <div class="source-stat">
+            <div class="source-stat-label">Görüntü Sayısı</div>
+            <div class="source-stat-value" data-field="imageCount">Yükleniyor...</div>
+          </div>
+          <div class="source-stat">
+            <div class="source-stat-label">Çözünürlük</div>
+            <div class="source-stat-value">10m/piksel</div>
+          </div>
+        </div>
+        <div class="source-actions">
+          <button class="btn btn-primary" title="ESA Copernicus'tan yeni görüntüleri indir">🔄 Senkronize Et</button>
+          <button class="btn btn-secondary">⚙️ Ayarlar</button>
+        </div>
+      </div>
+
+      <!-- Landsat 8/9 -->
+      <div class="source-card" data-source="landsat">
+        <div class="source-status status-syncing">⏳ Senkronize Ediliyor</div>
+        <div class="source-header">
+          <div class="source-icon">📡</div>
+          <div class="source-info">
+            <div class="source-name">Landsat 8/9 (NASA/USGS)</div>
+            <div class="source-type">30m Historical Imagery</div>
+            <a href="https://earthexplorer.usgs.gov/" target="_blank" class="source-url" title="USGS Earth Explorer">
+              🔗 earthexplorer.usgs.gov
+            </a>
+          </div>
+        </div>
+        <div class="source-description">
+          <strong>Uzun dönem analizi (2018-2024)</strong> için kullanılan NASA/USGS uydu görüntüleri. 
+          Sentinel'e göre daha düşük çözünürlükte (30m) ancak <strong>zaman serisi istikrarlı</strong> ve uzun süreli trendlerin tespitinde kritik. 
+          Geçmiş 6 yıllık vejetasyon değişimlerini izlemek için vazgeçilmez kaynak.
+        </div>
+        <div class="source-stats">
+          <div class="source-stat">
+            <div class="source-stat-label">Tarih Aralığı</div>
+            <div class="source-stat-value" data-field="dateRange">Yükleniyor...</div>
+          </div>
+          <div class="source-stat">
+            <div class="source-stat-label">Veri Boyutu</div>
+            <div class="source-stat-value" data-field="dataSize">Yükleniyor...</div>
+          </div>
+          <div class="source-stat">
+            <div class="source-stat-label">Görüntü Sayısı</div>
+            <div class="source-stat-value" data-field="imageCount">Yükleniyor...</div>
+          </div>
+          <div class="source-stat">
+            <div class="source-stat-label">Senkronizasyon</div>
+            <div class="source-stat-value" data-field="syncProgress">Yükleniyor...</div>
+          </div>
+        </div>
+        <div class="source-actions">
+          <button class="btn btn-danger" title="Senkronizasyonu durdur">⏸️ Duraklat</button>
+          <button class="btn btn-secondary">⚙️ Ayarlar</button>
+        </div>
+      </div>
+
+      <!-- Dynamic World -->
+      <div class="source-card" data-source="dynamicworld">
+        <div class="source-status status-active">✓ Aktif</div>
+        <div class="source-header">
+          <div class="source-icon">🌍</div>
+          <div class="source-info">
+            <div class="source-name">Dynamic World (Google Earth Engine)</div>
+            <div class="source-type">10m Global Land-Cover</div>
+            <a href="https://www.dynamicworld.app/" target="_blank" class="source-url" title="Dynamic World Platform">
+              🔗 dynamicworld.app
+            </a>
+          </div>
+        </div>
+        <div class="source-description">
+          <strong>Piksel düzeyinde arazi örtüsü sınıfları</strong> (vegetation, built-up, water, crops, trees vb.). 
+          Model etiketleri <strong>(ground-truth)</strong> oluşturmakta ve trend kontrolünde referans olarak kullanılıyor. 
+          Google Earth Engine üzerinden real-time erişim ile güncel veriler sağlanıyor.
+        </div>
+        <div class="source-stats">
+          <div class="source-stat">
+            <div class="source-stat-label">Son Güncelleme</div>
+            <div class="source-stat-value" data-field="lastUpdate">Yükleniyor...</div>
+          </div>
+          <div class="source-stat">
+            <div class="source-stat-label">Çözünürlük</div>
+            <div class="source-stat-value">10m/piksel</div>
+          </div>
+          <div class="source-stat">
+            <div class="source-stat-label">Sınıf Sayısı</div>
+            <div class="source-stat-value">9 sınıf</div>
+          </div>
+          <div class="source-stat">
+            <div class="source-stat-label">Güncellik</div>
+            <div class="source-stat-value" data-field="coverage">Yükleniyor...</div>
+          </div>
+        </div>
+        <div class="source-actions">
+          <button class="btn btn-primary" title="Earth Engine'den güncel katmanları çek">🔄 Senkronize Et</button>
+          <button class="btn btn-secondary">⚙️ Ayarlar</button>
+        </div>
+      </div>
+
+      <!-- ESA WorldCover -->
+      <div class="source-card" data-source="dynamicworld">
+        <div class="source-status status-active">✓ Aktif</div>
+        <div class="source-header">
+          <div class="source-icon">🗺️</div>
+          <div class="source-info">
+            <div class="source-name">ESA WorldCover</div>
+            <div class="source-type">10m Global Land-Cover</div>
+            <a href="https://worldcover2021.esa.int/" target="_blank" class="source-url" title="ESA WorldCover Portal">
+              🔗 worldcover2021.esa.int
+            </a>
+          </div>
+        </div>
+        <div class="source-description">
+          <strong>Sentinel tabanlı küresel arazi örtüsü haritası</strong>. 
+          Dynamic World ile kıyaslama ve doğrulama için kullanılıyor. 
+          ESA tarafından yıllık olarak güncellenen <strong>referans veri seti</strong> (baseline for validation).
+        </div>
+        <div class="source-stats">
+          <div class="source-stat">
+            <div class="source-stat-label">Son Güncelleme</div>
+            <div class="source-stat-value" data-field="lastUpdate">Yükleniyor...</div>
+          </div>
+          <div class="source-stat">
+            <div class="source-stat-label">Çözünürlük</div>
+            <div class="source-stat-value">10m/piksel</div>
+          </div>
+          <div class="source-stat">
+            <div class="source-stat-label">Veri Yılı</div>
+            <div class="source-stat-value">2021</div>
+          </div>
+          <div class="source-stat">
+            <div class="source-stat-label">Global Doğruluk</div>
+            <div class="source-stat-value">74.4%</div>
+          </div>
+        </div>
+        <div class="source-actions">
+          <button class="btn btn-primary" title="ESA'dan güncel WorldCover katmanlarını indir">🔄 Senkronize Et</button>
+          <button class="btn btn-secondary">⚙️ Ayarlar</button>
+        </div>
+      </div>
+
+      <!-- İBB Açık Veri Portalı -->
+      <div class="source-card" data-source="ibb">
+        <div class="source-status status-active">✓ Aktif</div>
+        <div class="source-header">
+          <div class="source-icon">🏛️</div>
+          <div class="source-info">
+            <div class="source-name">İBB Açık Veri Portalı</div>
+            <div class="source-type">Yerel Veri Kaynağı</div>
+            <a href="https://data.ibb.gov.tr/" target="_blank" class="source-url" title="İBB Açık Veri Portalı">
+              🔗 data.ibb.gov.tr
+            </a>
+          </div>
+        </div>
+        <div class="source-description">
+          İstanbul Büyükşehir Belediyesi'nin açık veri platformu. 
+          Park alanları, yeşil alan istatistikleri, nüfus verileri ve şehir envanter bilgileri. 
+          <strong>Ground-truth doğrulama</strong> ve lokal detay için kullanılıyor.
+        </div>
+        <div class="source-stats">
+          <div class="source-stat">
+            <div class="source-stat-label">Son Güncelleme</div>
+            <div class="source-stat-value" data-field="lastUpdate">Yükleniyor...</div>
+          </div>
+          <div class="source-stat">
+            <div class="source-stat-label">Veri Boyutu</div>
+            <div class="source-stat-value" data-field="dataSize">Yükleniyor...</div>
+          </div>
+          <div class="source-stat">
+            <div class="source-stat-label">API Çağrıları (Bugün)</div>
+            <div class="source-stat-value" data-field="apiCalls">Yükleniyor...</div>
+          </div>
+          <div class="source-stat">
+            <div class="source-stat-label">Format</div>
+            <div class="source-stat-value">GeoJSON, CSV</div>
+          </div>
+        </div>
+        <div class="source-actions">
+          <button class="btn btn-primary" title="İBB API'den güncel verileri çek">🔄 Senkronize Et</button>
+          <button class="btn btn-secondary">⚙️ Ayarlar</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Add New Source Button -->
+<button class="add-source-btn" title="Yeni Veri Kaynağı Ekle">+</button>
+
+<script>
+// ============================================================================
+// KİMLİK DOĞRULAMA (Authentication)
+// ============================================================================
+
+const token = localStorage.getItem('token');
+if (!token) {
+  location.href = '/';
+}
+
+/**
+ * Kullanıcı bilgilerini getir ve göster
+ */
+async function whoami() {
+  try {
+    const response = await fetch('/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    if (!response.ok) {
+      localStorage.removeItem('token');
+      location.href = '/';
+      return;
+    }
+    
+    const user = await response.json();
+    document.getElementById('who').textContent = user.email;
+  } catch (error) {
+    console.error('Kullanıcı bilgisi alınamadı:', error);
+    location.href = '/';
+  }
+}
+
+whoami();
+
+
+// ============================================================================
+// ÇIKIŞ İŞLEMİ (Logout)
+// ============================================================================
+
+document.getElementById('logout').onclick = () => {
+  localStorage.removeItem('token');
+  location.href = '/';
+};
+
+
+// ============================================================================
+// SIDEBAR İŞLEVLERİ (Sidebar Functions)
+// ============================================================================
+
+const sidebarToggle = document.getElementById('sidebar-toggle');
+const sidebar = document.getElementById('sidebar');
+let isCollapsed = false;
+
+/**
+ * Sidebar'ı aç/kapat
+ */
+sidebarToggle.onclick = () => {
+  isCollapsed = !isCollapsed;
+  sidebar.classList.toggle('collapsed', isCollapsed);
+  sidebarToggle.textContent = isCollapsed ? '☰' : '✕';
+  sidebarToggle.title = isCollapsed ? 'Sidebar Aç' : 'Sidebar Kapat';
+};
+
+/**
+ * Sidebar genişlik ayarlama (drag)
+ */
+const resizer = document.getElementById('sidebar-resizer');
+let isResizing = false;
+let startX = 0;
+let startWidth = 0;
+
+resizer.addEventListener('mousedown', (e) => {
+  isResizing = true;
+  startX = e.clientX;
+  startWidth = sidebar.offsetWidth;
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!isResizing) return;
+  const diff = e.clientX - startX;
+  const newWidth = Math.max(250, Math.min(600, startWidth + diff));
+  sidebar.style.width = newWidth + 'px';
+  document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
+});
+
+document.addEventListener('mouseup', () => {
+  if (!isResizing) return;
+  isResizing = false;
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+});
+
+
+// ============================================================================
+// VERİ KAYNAĞI İŞLEMLERİ (Data Source Actions)
+// ============================================================================
+
+/**
+ * Yeni veri kaynağı ekleme butonu
+ */
+document.querySelector('.add-source-btn').onclick = () => {
+  alert('Yeni veri kaynağı ekleme özelliği yakında eklenecek!');
+  // TODO: Modal ile yeni kaynak ekleme formu
+};
+
+/**
+ * Senkronizasyon butonları
+ * 
+ * Senkronizasyon Ne İşe Yarar?
+ * ---------------------------
+ * 1. Uzak kaynaktan (ESA Copernicus, Google Earth Engine, vb.) yeni verileri otomatik indirir
+ * 2. Güncellenen uydu görüntülerini ve land-cover katmanlarını sisteme ekler
+ * 3. Veri tabanını en güncel hale getirir (örn: 2024 Ocak -> 2024 Haziran)
+ * 4. Trend analizleri ve zaman serisi modellemesi için veri akışını besler
+ * 5. NDVI, NDWI, NDBI gibi indeksleri yeniden hesaplar
+ * 
+ * Örnek: Sentinel-2 senkronize edildiğinde:
+ * - Son 30 günün görüntüleri ESA API'den çekilir
+ * - Cloud coverage %20'nin altındaki görüntüler seçilir
+ * - Otomatik preprocessing yapılır (atmosferik düzeltme, maskeleme)
+ * - PostgreSQL/PostGIS'e kaydedilir
+ * - İndeksler hesaplanıp analiz için hazır hale getirilir
+ */
+document.querySelectorAll('.btn-primary').forEach(btn => {
+  btn.onclick = function(e) {
+    e.preventDefault();
+    const sourceName = this.closest('.source-card').querySelector('.source-name').textContent;
+    
+    if (this.textContent.includes('Aktif Et')) {
+      alert(`${sourceName} veri kaynağı aktif edilecek...`);
+      // TODO: API çağrısı ile kaynağı aktif et
+    } else {
+      alert(`✅ ${sourceName} senkronizasyonu başlatılıyor...\n\n` +
+            `🔄 Uzak sunucudan yeni veriler indiriliyor\n` +
+            `📊 Veri tabanı güncelleniyor\n` +
+            `🧮 İndeksler yeniden hesaplanıyor\n\n` +
+            `Bu işlem birkaç dakika sürebilir.`);
+      // TODO: API çağrısı ile senkronizasyon başlat
+      // fetch(`/api/sync/${sourceId}`, { method: 'POST' })
+    }
+  };
+});
+
+/**
+ * Duraklat butonları
+ */
+document.querySelectorAll('.btn-danger').forEach(btn => {
+  btn.onclick = function(e) {
+    e.preventDefault();
+    const sourceName = this.closest('.source-card').querySelector('.source-name').textContent;
+    
+    if (confirm(`${sourceName} senkronizasyonu duraklatılsın mı?`)) {
+      alert('Senkronizasyon duraklatılıyor...');
+      // TODO: API çağrısı ile senkronizasyonu duraklat
+    }
+  };
+});
+
+/**
+ * Ayarlar butonları
+ */
+document.querySelectorAll('.btn-secondary').forEach(btn => {
+  btn.onclick = function(e) {
+    e.preventDefault();
+    const sourceName = this.closest('.source-card').querySelector('.source-name').textContent;
+    alert(`${sourceName} ayarları açılacak...`);
+    // TODO: Modal ile kaynak ayarları formu
+  };
+});
+
+
+// ============================================================================
+// GERÇEK ZAMANLI VERİ YÜKLEME (Real-time Data Loading)
+// ============================================================================
+
+/**
+ * Gerçek zamanlı olarak veri kaynağı istatistiklerini güncelle
+ * 
+ * Normalde bu veriler backend API'den gelecek:
+ * GET /api/data-sources -> [{id, name, stats: {lastUpdate, dataSize, ...}}]
+ * 
+ * Şimdilik simüle edilmiş verilerle çalışıyor.
+ */
+async function loadDataSourceStats() {
+  // Simüle edilmiş veri (gerçek uygulamada API'den gelecek)
+  const mockData = {
+    sentinel2: {
+      lastUpdate: '2 saat önce',
+      dataSize: '1.24 TB',
+      imageCount: '492 görüntü'
+    },
+    landsat: {
+      dateRange: '2018-2024',
+      dataSize: '867 GB',
+      imageCount: '318 görüntü',
+      syncProgress: '71%'
+    },
+    dynamicworld: {
+      lastUpdate: '12 dakika önce',
+      coverage: 'Güncel (2024)'
+    },
+    worldcover: {
+      lastUpdate: '5 gün önce'
+    },
+    ibb: {
+      lastUpdate: '3 saat önce',
+      dataSize: '152 MB',
+      apiCalls: '18,743'
+    }
+  };
+
+  // Her kart için verileri güncelle
+  document.querySelectorAll('.source-card[data-source]').forEach(card => {
+    const sourceId = card.getAttribute('data-source');
+    const data = mockData[sourceId];
+    
+    if (!data) return;
+
+    // Her data-field için değerleri güncelle
+    card.querySelectorAll('[data-field]').forEach(field => {
+      const fieldName = field.getAttribute('data-field');
+      if (data[fieldName]) {
+        // Animasyonlu güncelleme
+        field.style.opacity = '0.5';
+        setTimeout(() => {
+          field.textContent = data[fieldName];
+          field.style.opacity = '1';
+        }, 300);
+      }
+    });
+  });
+
+  console.log('✅ Veri kaynağı istatistikleri güncellendi');
+}
+
+// Sayfa yüklendiğinde verileri yükle
+loadDataSourceStats();
+
+// Her 30 saniyede bir verileri güncelle (gerçek zamanlı simülasyonu)
+setInterval(loadDataSourceStats, 30000);
+
+/**
+ * Gerçek API entegrasyonu için:
+ * 
+ * async function loadDataSourceStats() {
+ *   try {
+ *     const response = await fetch('/api/data-sources/stats', {
+ *       headers: { Authorization: `Bearer ${token}` }
+ *     });
+ *     
+ *     if (!response.ok) throw new Error('Stats yüklenemedi');
+ *     
+ *     const sources = await response.json();
+ *     
+ *     sources.forEach(source => {
+ *       const card = document.querySelector(`[data-source="${source.id}"]`);
+ *       if (!card) return;
+ *       
+ *       Object.entries(source.stats).forEach(([key, value]) => {
+ *         const field = card.querySelector(`[data-field="${key}"]`);
+ *         if (field) field.textContent = value;
+ *       });
+ *     });
+ *   } catch (error) {
+ *     console.error('Veri kaynağı istatistikleri yüklenemedi:', error);
+ *   }
+ * }
+ */
+
+</script>
+</body>
+</html>
