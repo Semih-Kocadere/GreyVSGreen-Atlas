@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="icon" type="image/png" href="/images/favicon.png"/>
 <title>Dashboard — Greygreen</title>
 
 <!-- 
@@ -152,17 +153,17 @@
 
     <div class="stats-grid">
       <div class="stat-card">
-  <img src="/images/agac-resimleri-rooteto4.jpg" alt="Yeşil Alan" class="stat-icon">
+    <img src="./images/agac-resimleri-rooteto4.jpg" alt="Yeşil Alan" class="stat-icon">
         <div class="stat-value">31.2%</div>
         <div class="stat-label">Ortalama Yeşil Alan</div>
       </div>
       <div class="stat-card">
-  <img src="/images/R.jpg" alt="Beton Alan" class="stat-icon">
+    <img src="./images/R.jpg" alt="Beton Alan" class="stat-icon">
         <div class="stat-value">61.4%</div>
         <div class="stat-label">Ortalama Beton</div>
       </div>
       <div class="stat-card">
-  <img src="/images/OIP (1).webp" alt="Su Kaynakları" class="stat-icon">
+    <img src="./images/OIP_1.webp" alt="Su Kaynakları" class="stat-icon">
         <div class="stat-value">7.4%</div>
         <div class="stat-label">Su Kaynakları</div>
       </div>
@@ -172,50 +173,35 @@
       <div class="card" data-city="istanbul">
         <h3>İstanbul</h3>
         <p>Türkiye'nin en büyük metropolü. Boğaz'ın iki yakasında yeşil alan ve beton değişimini keşfedin.</p>
-        <button class="btn btn-kpi" data-city="istanbul">
-          📊 Özet İstatistikler
-        </button>
+        <button class="btn btn-kpi" data-city="istanbul">📊 Özet İstatistikler</button>
         <div class="button-grid">
-          <button class="btn btn-detail" onclick="location.href='/istanbul-detail.html'">
-            🔬 Detaylı Analiz
-          </button>
-          <button class="btn btn-trend" onclick="location.href='/trend-prediction.html'">
-            📈 Trend Tahmini
-          </button>
+          <button class="btn btn-detail" onclick="location.href='/istanbul-detail.html'">🔬 Detaylı Analiz</button>
+          <button class="btn btn-trend" onclick="location.href='/trend-prediction.html'">📈 Trend Tahmini</button>
         </div>
         <div class="kpis" id="kpis-istanbul" style="display:none">
-          <div class="k">
-            <div class="muted">🌳 Yeşil</div>
-            <b class="k-value" id="k-green-istanbul">–</b>
-          </div>
-          <div class="k">
-            <div class="muted">🏢 Beton</div>
-            <b class="k-value" id="k-grey-istanbul">–</b>
-          </div>
-          <div class="k">
-            <div class="muted">💧 Su</div>
-            <b class="k-value" id="k-water-istanbul">–</b>
-          </div>
+          <div class="k"><div class="muted">🌳 Yeşil</div><b class="k-value" id="k-green-istanbul">–</b></div>
+          <div class="k"><div class="muted">🏢 Beton</div><b class="k-value" id="k-grey-istanbul">–</b></div>
+          <div class="k"><div class="muted">💧 Su</div><b class="k-value" id="k-water-istanbul">–</b></div>
         </div>
         <div class="note" id="note-istanbul" style="display:none"></div>
       </div>
 
       <div class="card card-disabled" data-city="ankara">
-        <h3>Ankara</h3>
-        <p>Başkent Ankara'nın yeşil alan analizi yakında hazır olacak. Anıtkabir ve çevre yeşil alanların takibi.</p>
-        <button class="btn btn-disabled" disabled>Yakında Aktif</button>
+  <h3>Ankara</h3>
+  <p>Başkent Ankara'nın yeşil alan analizi yakında hazır olacak. Anıtkabir ve çevre yeşil alanların takibi.</p>
+  <button class="btn btn-disabled" disabled>Yakında Aktif</button>
       </div>
 
       <div class="card card-disabled" data-city="izmir">
-        <h3>İzmir</h3>
-        <p>Ege'nin incisi İzmir'in sahil şeridi ve kent içi yeşil alanların analizi çok yakında.</p>
-        <button class="btn btn-disabled" disabled>Yakında Aktif</button>
+  <h3>İzmir</h3>
+  <p>Ege'nin incisi İzmir'in sahil şeridi ve kent içi yeşil alanların analizi çok yakında.</p>
+  <button class="btn btn-disabled" disabled>Yakında Aktif</button>
       </div>
 
       <div class="card card-disabled" data-city="bursa">
-        <h3>Bursa</h3>
-        <p>Yeşil Bursa'nın tarihi dokusu ve doğal güzellikleri yakında analiz edilecek.</p>
-        <button class="btn btn-disabled" disabled>Yakında Aktif</button>
+  <h3>Bursa</h3>
+  <p>Yeşil Bursa'nın tarihi dokusu ve doğal güzellikleri yakında analiz edilecek.</p>
+  <button class="btn btn-disabled" disabled>Yakında Aktif</button>
       </div>
     </div>
   </main>
@@ -370,25 +356,22 @@ let isCollapsed = false;
  */
 sidebarToggle.onclick = () => {
   isCollapsed = !isCollapsed;
-  
   // 'collapsed' class'ını ekle/çıkar (CSS'de display:none)
   sidebar.classList.toggle('collapsed', isCollapsed);
-  
   // Main content'e de class ekle/çıkar
   if (mainContent) {
     mainContent.classList.toggle('sidebar-collapsed', isCollapsed);
   }
-  
   // Buton içeriğini değiştir
   sidebarToggle.textContent = isCollapsed ? '☰' : '✕';
   sidebarToggle.title = isCollapsed ? 'Sidebar Aç' : 'Sidebar Kapat';
-  
-  // Sidebar açıkken genişliği CSS değişkeninde sakla
-  if (!isCollapsed) {
-    document.documentElement.style.setProperty(
-      '--sidebar-width',
-      sidebar.offsetWidth + 'px'
-    );
+  // Renk değişimi için class ekle/çıkar
+  if (isCollapsed) {
+    sidebarToggle.classList.add('toggled');
+  } else {
+    sidebarToggle.classList.remove('toggled');
+    sidebar.style.width = '';
+    document.documentElement.style.setProperty('--sidebar-width', '300px');
   }
 };
 
@@ -402,6 +385,15 @@ let isResizing = false;  // Şu an sürükleniyor mu?
 let startX = 0;          // Sürükleme başlangıç X koordinatı
 let startWidth = 0;      // Sürükleme başlangıç sidebar genişliği
 
+// Sürükleme sırasında transition'ı kaldır
+function removeSidebarTransition() {
+  sidebar.style.transition = 'none';
+}
+// Sürükleme bitince transition'ı geri ekle
+function restoreSidebarTransition() {
+  sidebar.style.transition = '';
+}
+
 /**
  * Resizer çubuğuna mousedown yapıldığında sürüklemeyi başlat
  */
@@ -409,7 +401,7 @@ resizer.addEventListener('mousedown', (e) => {
   isResizing = true;
   startX = e.clientX;
   startWidth = sidebar.offsetWidth;
-  
+  removeSidebarTransition();
   // Görsel feedback: resizer ve cursor değişir
   resizer.classList.add('resizing');
   document.body.style.cursor = 'col-resize';
@@ -422,16 +414,27 @@ resizer.addEventListener('mousedown', (e) => {
  */
 document.addEventListener('mousemove', (e) => {
   if (!isResizing) return;
-  
+
   // Hareket mesafesini hesapla
   const diff = e.clientX - startX;
-  
-  // Yeni genişlik: başlangıç + hareket (sınırlar içinde)
-  const newWidth = Math.max(250, Math.min(600, startWidth + diff));
-  
+  const minSidebar = 60; // px, bu değerin altı kapalı sayılır
+  const maxSidebar = 600;
+  const newWidth = Math.max(minSidebar, Math.min(maxSidebar, startWidth + diff));
+
   // Sidebar genişliğini güncelle
   sidebar.style.width = newWidth + 'px';
   document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
+
+  // Eğer çok daraltıldıysa otomatik kapat
+  if (newWidth <= minSidebar + 2) {
+    sidebar.classList.add('collapsed');
+    if (mainContent) mainContent.classList.add('sidebar-collapsed');
+    isCollapsed = true;
+  } else {
+    sidebar.classList.remove('collapsed');
+    if (mainContent) mainContent.classList.remove('sidebar-collapsed');
+    isCollapsed = false;
+  }
 });
 
 /**
@@ -439,11 +442,11 @@ document.addEventListener('mousemove', (e) => {
  */
 document.addEventListener('mouseup', () => {
   if (!isResizing) return;
-  
   isResizing = false;
   resizer.classList.remove('resizing');
   document.body.style.cursor = '';
   document.body.style.userSelect = '';
+  restoreSidebarTransition();
 });
 
 

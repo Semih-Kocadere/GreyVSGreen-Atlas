@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="icon" type="image/png" href="../images/favicon.png"/>
 <title>Trend Tahmini — Grey vs Green Atlas</title>
 
 <!-- 
@@ -35,6 +36,54 @@
 
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  .map-outer {
+    position: relative;
+    width: 100%;
+    height: 60vh;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #map {
+    min-height: 400px;
+    height: 100%;
+    width: 100%;
+    background: #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    margin-bottom: 24px;
+  }
+  #loading-overlay {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255,255,255,0.85);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .loading-spinner {
+    font-size: 48px;
+    animation: spin 1s linear infinite;
+    color: #10b981;
+    margin-bottom: 12px;
+  }
+  .loading-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: #059669;
+    letter-spacing: 0.5px;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
 
 </head>
 <body>
@@ -143,41 +192,45 @@
     </div>
 
     <!-- Kontrol Paneli -->
-    <div class="control-panel">
+    <div class="control-panel" aria-label="Harita ve Overlay Kontrolleri">
       <div class="control-group">
-        <label>📅 Görüntüleme Modu</label>
-        <div class="mode-buttons">
-          <button class="mode-btn active" data-mode="prediction">Tahmin</button>
-          <button class="mode-btn" data-mode="comparison">Karşılaştırma</button>
-          <button class="mode-btn" data-mode="difference">Fark Analizi</button>
+        <label for="mode-prediction">📅 Görüntüleme Modu</label>
+        <div class="mode-buttons" role="group" aria-label="Görüntüleme Modu">
+          <button class="mode-btn active" id="mode-prediction" data-mode="prediction" aria-pressed="true">Tahmin</button>
+          <button class="mode-btn" id="mode-comparison" data-mode="comparison" aria-pressed="false">Karşılaştırma</button>
+          <button class="mode-btn" id="mode-difference" data-mode="difference" aria-pressed="false">Fark Analizi</button>
         </div>
       </div>
-      
       <div class="control-group">
-        <label>🎨 Overlay Şeffaflık</label>
-        <input type="range" id="opacity-slider" min="0" max="100" value="70" />
+        <label for="opacity-slider">🎨 Overlay Şeffaflık</label>
+        <input type="range" id="opacity-slider" min="0" max="100" value="70" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" />
         <span id="opacity-value">70%</span>
       </div>
-      
       <div class="control-group">
         <label>🔍 Katman Seçimi</label>
-        <div class="layer-checkboxes">
-          <label><input type="checkbox" id="layer-green" checked /> 🌳 Yeşil Alan</label>
-          <label><input type="checkbox" id="layer-gray" checked /> 🏢 Beton</label>
-          <label><input type="checkbox" id="layer-water" checked /> 💧 Su</label>
+        <div class="layer-checkboxes" role="group" aria-label="Katman Seçimi">
+          <label><input type="checkbox" id="layer-green" checked aria-checked="true" /> 🌳 Yeşil Alan</label>
+          <label><input type="checkbox" id="layer-gray" checked aria-checked="true" /> 🏢 Beton</label>
+          <label><input type="checkbox" id="layer-water" checked aria-checked="true" /> 💧 Su</label>
         </div>
       </div>
     </div>
 
     <!-- Harita Konteyneri -->
     <div class="map-container">
-      <div id="map" class="map"></div>
-      
+      <div class="map-outer">
+        <div id="map" class="map" aria-label="Tahmin Haritası"></div>
+        <canvas id="mask-canvas" width="256" height="256" style="position:absolute;top:0;left:0;z-index:500;pointer-events:none;display:none;"></canvas>
+        <!-- Loading animasyonu -->
+        <div id="loading-overlay">
+          <div class="loading-spinner">⏳</div>
+          <div class="loading-text">Harita yükleniyor...</div>
+        </div>
+      </div>
       <!-- Karşılaştırma Modu için İkinci Harita -->
-      <div id="map-compare" class="map map-hidden"></div>
-      
+      <div id="map-compare" class="map map-hidden" aria-label="Karşılaştırma Haritası"></div>
       <!-- Legend -->
-      <div class="map-legend">
+      <div class="map-legend" aria-label="Sınıf Renkleri">
         <div class="legend-title">Sınıflandırma</div>
         <div class="legend-item">
           <span class="legend-color" style="background: #10b981;"></span>
@@ -209,8 +262,8 @@
       </div>
       
       <div class="timeline-slider">
-        <input type="range" id="time-slider" min="0" max="20" value="15" step="1" />
-        <div class="timeline-labels" id="timeline-labels"></div>
+        <input type="range" id="time-slider" min="0" max="20" value="15" step="1" aria-valuenow="15" aria-valuemin="0" aria-valuemax="20" />
+        <div class="timeline-labels" id="timeline-labels" aria-label="Zaman Dilimleri"></div>
       </div>
       
       <div class="timeline-controls">
@@ -226,6 +279,16 @@
           </select>
         </div>
       </div>
+    </div>
+
+    <!-- Trend Chart -->
+    <!-- Folium Harita ve İndirme Butonu Alanı -->
+    <div id="folium-map-section" style="margin:32px 0 0 0; display:flex; flex-direction:column; align-items:center;">
+  <div id="folium-map-container" style="width:100%; min-height:600px; max-width:1400px; border-radius:12px; box-shadow:0 2px 16px rgba(0,0,0,0.08); background:#f3f4f6; display:flex; align-items:center; justify-content:center;">
+        <!-- Burada folium haritası gösterilecek -->
+        <span style="color:#6b7280;">Tahmin haritası burada görünecek</span>
+      </div>
+  <!-- İndirme butonu kaldırıldı -->
     </div>
 
     <!-- İstatistik Kartları -->
@@ -287,6 +350,11 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+// Loading overlay kontrolü
+function showLoading(show) {
+  const overlay = document.getElementById('loading-overlay');
+  if (overlay) overlay.style.display = show ? 'flex' : 'none';
+}
 // ============================================================================
 // KİMLİK DOĞRULAMA
 // ============================================================================
@@ -331,6 +399,7 @@ let overlayLayer = null; // Harita overlay katmanı
 // VERİ YÜKLEME
 // ============================================================================
 async function loadPredictionData() {
+  showLoading(true);
   try {
     const response = await fetch('/api/trend/predict', {
       headers: { Authorization: `Bearer ${token}` }
@@ -347,12 +416,104 @@ async function loadPredictionData() {
     slider.max = years.length - 1;
     slider.value = years.length - 1;
     currentIndex = years.length - 1;
+    updateTimelineLabels(years);
     updateUI();
+    createTrendChart();
     console.log('Tahmin verisi yüklendi:', predictionData);
   } catch (error) {
     console.error('Tahmin yükleme hatası:', error);
     showErrorMessage('Tahmin verisi yüklenemedi. Lütfen modellerin yüklendiğinden emin olun.');
+    // Hata olsa da harita görünür kalsın, loading overlay'i kapat
+    showLoading(false);
+  } finally {
+    // Sadece başarılı yüklemede değil, her durumda loading overlay'i kapat
+    showLoading(false);
   }
+}
+
+// Trend Chart.js fonksiyonu
+let trendChartInstance = null;
+function createTrendChart() {
+  const chartEl = document.getElementById('trendChart');
+  if (!chartEl || !predictionData || !predictionData.predictions) return;
+
+  // X ekseni: dönemler
+  const labels = predictionData.predictions.map(p => p.prediction.timeframe);
+  // Y ekseni: yeşil, beton, su oranları
+  const green = predictionData.predictions.map(p => p.prediction.green);
+  const grey = predictionData.predictions.map(p => p.prediction.grey);
+  const water = predictionData.predictions.map(p => p.prediction.water);
+
+  if (trendChartInstance) {
+    trendChartInstance.destroy();
+  }
+  trendChartInstance = new Chart(chartEl.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: '🌳 Yeşil Alan',
+          data: green,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16,185,129,0.15)',
+          borderWidth: 3,
+          tension: 0.3,
+          fill: true,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: '🏢 Beton',
+          data: grey,
+          borderColor: '#9ca3af',
+          backgroundColor: 'rgba(156,163,175,0.15)',
+          borderWidth: 3,
+          tension: 0.3,
+          fill: true,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: '💧 Su',
+          data: water,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.15)',
+          borderWidth: 3,
+          tension: 0.3,
+          fill: true,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true },
+        title: { display: false }
+      },
+      scales: {
+        y: { beginAtZero: true, max: 100, title: { display: true, text: '%' } }
+      }
+    }
+  });
+}
+
+// Timeline label'larını doldur
+function updateTimelineLabels(years) {
+  const labelsDiv = document.getElementById('timeline-labels');
+  if (!labelsDiv || !years) return;
+  labelsDiv.innerHTML = '';
+  const slider = document.getElementById('time-slider');
+  const sliderWidth = slider.offsetWidth || 600;
+  years.forEach((y, i) => {
+    const label = document.createElement('div');
+    label.className = 'timeline-label' + (i === currentIndex ? ' active' : '');
+    label.textContent = y;
+    label.style.left = ((i / (years.length - 1)) * 100) + '%';
+    labelsDiv.appendChild(label);
+  });
 }
 
 function updateUI() {
@@ -366,8 +527,28 @@ function updateUI() {
   updateStatCard('green', pred.current.green, pred.prediction.green, pred.changes.green);
   updateStatCard('gray', pred.current.grey, pred.prediction.grey, pred.changes.grey);
   updateStatCard('water', pred.current.water, pred.prediction.water, pred.changes.water);
-  // Haritaya overlay ekle
+  // Haritaya overlay ekle (isteğe bağlı, sadece mask varsa)
   addPredictionOverlay(pred);
+
+  // --- TREND TILE LAYER ENTEGRASYONU ---
+  // Yıl ve çeyrek predictionData'dan alınır
+  const year = pred.prediction.year || pred.current.year;
+  const quarter = pred.prediction.quarter || pred.current.quarter;
+
+  // Eski trend tile layer'ı kaldır
+  if (window.trendTileLayer) {
+    map.removeLayer(window.trendTileLayer);
+    window.trendTileLayer = null;
+  }
+
+  // Yeni trend tile layer'ı ekle
+  window.trendTileLayer = L.tileLayer(`/api/trend/tiles/${year}/${quarter}/{z}/{x}/{y}.png`, {
+    attribution: 'Trend Prediction',
+    opacity: parseFloat(opacitySlider.value) / 100,
+    maxZoom: 18,
+    tileSize: 256
+  });
+  window.trendTileLayer.addTo(map);
 }
 
 function updateStatCard(type, current, predicted, change) {
@@ -391,70 +572,52 @@ function addPredictionOverlay(pred) {
     window.overlayLayers.forEach(l => map.removeLayer(l));
   }
   window.overlayLayers = [];
-  const bounds = [[40.8, 28.6], [41.4, 29.4]];
-  if (pred && pred.current_softmax) {
-    const arr = pred.current_softmax;
-    const h = arr[1].length;
-    const w = arr[1][0].length;
-    // Katman renk ve indexleri
-    const channels = [
-      {name: 'green', idx: 1, color: [32, 255, 80]},   // Yeşil
-      {name: 'gray', idx: 2, color: [120, 120, 120]},  // Beton
-      {name: 'water', idx: 3, color: [30, 144, 255]}   // Su
-    ];
-    // Seçili katman sayısına göre opaklık ayarla
-    const selected = channels.filter(ch => visibleLayers[ch.name]);
-    let overlayOpacity = 0.7;
-    if (selected.length > 1) overlayOpacity = 0.35;
-    if (selected.length > 2) overlayOpacity = 0.25;
-    if (selected.length === 0) overlayOpacity = 0;
-    channels.forEach(ch => {
-      if (!visibleLayers[ch.name]) return;
-      const channel = arr[ch.idx];
-      const imageData = new Uint8ClampedArray(w * h * 4);
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          const v = Math.max(0, Math.min(1, channel[y][x]));
-          const idx = (y * w + x) * 4;
-          imageData[idx] = ch.color[0];
-          imageData[idx+1] = ch.color[1];
-          imageData[idx+2] = ch.color[2];
-          imageData[idx+3] = Math.round(180 * v + 60); // Daha belirgin opaklık
+  // Sadece İstanbul tahmini için overlay
+  if (window.overlayLayers && Array.isArray(window.overlayLayers)) {
+    window.overlayLayers.forEach(l => map.removeLayer(l));
+  }
+  window.overlayLayers = [];
+  if (pred && pred.class_mask) {
+    const mask = pred.class_mask;
+    // Sabit boyut: 256x256
+    const w = 256;
+    const h = 256;
+    // Mask boyutu farklıysa yeniden boyutlandır (gerekirse)
+    // (Burada varsayılan olarak mask[x][y] varsa kullanılır)
+    // Renkler: 0-bg, 1-yeşil, 2-gri, 3-mavi
+    const colors = {
+      0: [0,0,0,0],        // background: şeffaf
+      1: [16,185,129,220], // green: #10b981
+      2: [128,128,128,220],// gray: #808080
+      3: [59,130,246,220]  // water: #3b82f6
+    };
+    // Canvas oluştur
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    const imgData = ctx.createImageData(w, h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        let cls = 0;
+        if (mask[x] && typeof mask[x][y] !== 'undefined') {
+          cls = mask[x][y];
         }
+        const idx = (y * w + x) * 4;
+        const color = colors[cls] || [0,0,0,0];
+        imgData.data[idx] = color[0];
+        imgData.data[idx+1] = color[1];
+        imgData.data[idx+2] = color[2];
+        imgData.data[idx+3] = Math.round(color[3] * (opacitySlider.value/100));
       }
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      const img = ctx.createImageData(w, h);
-      img.data.set(imageData);
-      ctx.putImageData(img, 0, 0);
-      const dataUrl = canvas.toDataURL('image/png');
-      const layer = L.imageOverlay(dataUrl, bounds, {opacity: (opacitySlider.value/100)*overlayOpacity});
-      layer.addTo(map);
-      window.overlayLayers.push(layer);
-    });
-    // Popup sadece yeşil için gösterilsin (örnek)
-    if (window.overlayLayers[0]) {
-      window.overlayLayers[0].bindPopup(`
-        <div style="font-family: system-ui; padding: 8px;">
-          <strong>🔮 ${pred.prediction.timeframe} Tahmini (Softmax)</strong><br/>
-          <div style="margin-top: 8px; font-size: 13px;">
-            🌳 Yeşil: ${pred.prediction.green.toFixed(1)}%<br/>
-            🏢 Beton: ${pred.prediction.grey.toFixed(1)}%<br/>
-            💧 Su: ${pred.prediction.water.toFixed(1)}%
-          </div>
-        </div>
-      `);
     }
-  } else {
-    const rect = L.rectangle(bounds, {
-      color: '#10b981',
-      weight: 3,
-      fillOpacity: 0.1,
-      dashArray: '10, 5'
-    }).addTo(map);
-    window.overlayLayers.push(rect);
+    ctx.putImageData(imgData, 0, 0);
+    const dataUrl = canvas.toDataURL('image/png');
+    // İstanbul için bounds
+    const bounds = [[40.8, 28.6], [41.4, 29.4]];
+    const layer = L.imageOverlay(dataUrl, bounds, {opacity: 0.7});
+    layer.addTo(map);
+    window.overlayLayers.push(layer);
   }
 // FAZLADAN KAPATMA PARANTEZİ SİLİNDİ
 }
@@ -482,13 +645,82 @@ function showErrorMessage(message) {
   }, 5000);
 }
 
-// ============================================================================
-// HARİTA BAŞLATMA
-// ============================================================================
-const map = L.map('map').setView([41.0082, 28.9784], 11);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap contributors'
-}).addTo(map);
+
+
+// --- HARİTA BAŞLATMA VE TREND TILE LAYER ---
+window.addEventListener('DOMContentLoaded', () => {
+  // Harita container'ı tam oturmazsa, boyutunu güncelle
+  setTimeout(() => {
+    if (window.map) window.map.invalidateSize();
+  }, 400);
+  const istanbulBounds = [[40.75, 28.62], [41.18, 29.56]];
+  window.map = L.map('map', {
+    center: [40.965, 29.09],
+    zoom: 11,
+    minZoom: 10,
+    maxZoom: 18,
+    zoomControl: true,
+    scrollWheelZoom: true,
+    doubleClickZoom: false,
+    dragging: true,
+    zoomSnap: 0.10,
+    zoomDelta: 0.5,
+    wheelPxPerZoomLevel: 120
+  });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxZoom: 18
+  }).addTo(window.map);
+
+  window.trendTileLayer = null;
+  window.currentTrendYear = 2026;
+  window.currentTrendQuarter = 1;
+  window.trendOpacity = 0.7;
+
+  window.updateTrendTileLayer = function() {
+    if (window.trendTileLayer) {
+      window.map.removeLayer(window.trendTileLayer);
+    }
+    const tileUrl = `/api/trend/tiles/${window.currentTrendYear}/${window.currentTrendQuarter}/{z}/{x}/{y}.png`;
+    window.trendTileLayer = L.tileLayer(tileUrl, {
+      attribution: 'Trend Prediction',
+      minZoom: 12,
+      maxZoom: 15,
+      opacity: window.trendOpacity,
+      tileSize: 256
+    });
+    window.trendTileLayer.addTo(window.map);
+    console.log(`🟢 Trend tile layer updated: ${window.currentTrendYear} Q${window.currentTrendQuarter}`);
+  };
+
+  // Opacity slider event
+  const opacitySlider = document.getElementById('opacity-slider');
+  if (opacitySlider) {
+    opacitySlider.addEventListener('input', (e) => {
+      window.trendOpacity = e.target.value / 100;
+      document.getElementById('opacity-value').textContent = e.target.value + '%';
+      if (window.trendTileLayer) {
+        window.trendTileLayer.setOpacity(window.trendOpacity);
+      }
+    });
+  }
+
+  // Zoom kontrolü - Düşük zoom'da tile layer'ı gizle
+  window.map.on('zoomend', () => {
+    const currentZoom = window.map.getZoom();
+    if (currentZoom < 12 && window.trendTileLayer) {
+      window.map.removeLayer(window.trendTileLayer);
+      window.trendTileLayer = null;
+      console.log('ℹ️ Zoom seviyesi düşük - trend tile layer gizlendi');
+    } else if (currentZoom >= 12 && !window.trendTileLayer) {
+      window.updateTrendTileLayer();
+      console.log('✅ Zoom seviyesi yeterli - trend tile layer gösteriliyor');
+    }
+  });
+
+  // Başlangıçta trend tile layer'ı ekle
+  window.updateTrendTileLayer();
+});
 
 // Karşılaştırma haritası (başlangıçta gizli)
 let mapCompare = null;
@@ -706,6 +938,77 @@ timeSlider.oninput();
 // SAYFA YÜKLENDİĞİNDE VERİ YÜKLE
 // ============================================================================
 loadPredictionData();
+
+
+// ============================================================================
+// FOLIUM HARİTA İNDİRME
+// ============================================================================
+
+
+// --- PNG Mozaik Haritasını fetch+blob ile göster ---
+async function showMosaicImage() {
+  const year = window.currentTrendYear || 2026;
+  const quarter = window.currentTrendQuarter || 1;
+  const token = localStorage.getItem('token');
+  if (!token) {
+    alert('Giriş yapmalısınız!');
+    return;
+  }
+  const pngUrl = `/api/trend/folium_mosaic/${year}/${quarter}/download`;
+  const foliumContainer = document.getElementById('folium-map-container');
+  if (foliumContainer) {
+    foliumContainer.innerHTML = '';
+    try {
+      const resp = await fetch(pngUrl, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!resp.ok) throw new Error('PNG mozaik haritası alınamadı');
+      const blob = await resp.blob();
+      const imgUrl = URL.createObjectURL(blob);
+      const img = document.createElement('img');
+      img.src = imgUrl;
+      img.alt = 'Tahmin Mozaik Haritası';
+      img.style.maxWidth = '100%';
+      img.style.borderRadius = '12px';
+      img.style.boxShadow = '0 2px 16px rgba(0,0,0,0.08)';
+      foliumContainer.appendChild(img);
+    } catch (e) {
+      foliumContainer.innerHTML = '<span style="color:#ef4444">PNG mozaik haritası yüklenemedi</span>';
+    }
+  }
+}
+
+// --- Folium haritasını otomatik olarak iframe ile göster ---
+async function showFoliumMapIframe() {
+  const year = window.currentTrendYear || 2026;
+  const quarter = window.currentTrendQuarter || 1;
+  const token = localStorage.getItem('token');
+  const foliumContainer = document.getElementById('folium-map-container');
+  if (foliumContainer) {
+    // Folium haritası endpointi token gerektiriyorsa ekle
+    let foliumUrl = `/api/trend/folium_map/${year}/${quarter}`;
+    if (token) foliumUrl += `?token=${encodeURIComponent(token)}`;
+    foliumContainer.innerHTML = '';
+    const iframe = document.createElement('iframe');
+    iframe.src = foliumUrl;
+  iframe.style.width = '100%';
+  iframe.style.minHeight = '800px';
+  iframe.style.height = '800px';
+    iframe.style.border = 'none';
+    iframe.style.borderRadius = '12px';
+    foliumContainer.appendChild(iframe);
+  }
+}
+
+// --- Sayfa yüklenince folium haritasını otomatik göster ---
+window.addEventListener('DOMContentLoaded', () => {
+  showFoliumMapIframe();
+});
+
+// İndirme butonu ve fonksiyonu kaldırıldı
 </script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </body>
 </html>

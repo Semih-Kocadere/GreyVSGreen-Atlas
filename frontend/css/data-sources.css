@@ -8,25 +8,32 @@
    ============================================================================
 */
 
-/* Ana Başlık */
+/* Header Bölümü */
 .header {
-  margin-bottom: 48px;
+  position: relative;
+  z-index: 1;
+  padding: 20px 0;
 }
 
 .header h1 {
-  font-size: 56px;
+  font-size: 50px;
   font-weight: 900;
-  background: linear-gradient(135deg, #ffffff, rgba(255,255,255,0.7));
+  background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  letter-spacing: -2px;
-  margin-bottom: 12px;
+  letter-spacing: -1.4px;
+  margin-bottom: 18px;
+  text-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
+  position: relative;
+  display: inline-block;
+  padding-bottom: 14px;
+  padding-left: 10px;
 }
 
 .header p {
   font-size: 19px;
-  color: rgba(255,255,255,0.85);
+  color: rgba(2, 0, 0, 0.85);
   font-weight: 500;
 }
 
@@ -82,31 +89,32 @@
 /* Veri Kaynağı Kartları Grid */
 .sources-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 32px;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 28px;
   margin-bottom: 48px;
+  align-items: stretch;
 }
 
 /* Veri Kaynağı Kartı */
 .source-card {
   background: var(--card-bg);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-  border: 2px solid var(--card-border);
-  transition: all 0.3s;
+  backdrop-filter: blur(12px);
+  border-radius: 22px;
+  padding: 32px 28px 28px 28px;
+  box-shadow: 0 6px 32px 0 rgba(2,132,199,0.10), 0 1.5px 6px rgba(0,0,0,0.04);
+  border: 1.5px solid var(--card-border);
+  transition: box-shadow 0.22s, border-color 0.22s, transform 0.18s;
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 680px;
+  min-height: 520px;
 }
 
 .source-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(2,132,199,0.2);
-  border-color: rgba(2,132,199,0.3);
+  transform: translateY(-6px) scale(1.012);
+  box-shadow: 0 16px 48px rgba(2,132,199,0.18), 0 2px 8px rgba(0,0,0,0.06);
+  border-color: rgba(2,132,199,0.35);
 }
 
 /* Durum Badge */
@@ -144,9 +152,9 @@
 .source-header {
   display: flex;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 20px;
-  padding-right: 120px;
+  gap: 18px;
+  margin-bottom: 16px;
+  padding-right: 60px;
 }
 
 .source-icon {
@@ -161,11 +169,12 @@
 }
 
 .source-name {
-  font-size: 22px;
+  font-size: 23px;
   font-weight: 900;
   color: var(--text-primary);
-  margin-bottom: 8px;
-  line-height: 1.3;
+  margin-bottom: 6px;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
 }
 
 .source-type {
@@ -252,74 +261,82 @@
 /* Aksiyon Butonları */
 .source-actions {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   margin-top: auto;
+  width: 100%;
 }
 
 .source-btn {
   flex: 1;
-  padding: 16px 24px;
-  border-radius: 12px;
+  padding: 16px 0;
+  border-radius: 14px;
   border: none;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  font-size: 15px;
-  transition: all 0.3s;
+  font-size: 16px;
+  transition: background 0.22s, color 0.22s, box-shadow 0.22s, transform 0.18s;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  letter-spacing: 0.2px;
 }
 
 .source-btn-primary {
   background: var(--accent-gradient);
-  color: white;
-  box-shadow: 0 4px 16px rgba(2,132,199,0.3);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(2,132,199,0.18);
+  border: none;
 }
 
 .source-btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(2,132,199,0.5);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 8px 28px rgba(2,132,199,0.28);
 }
 
 .source-btn-secondary {
-  background: rgba(2,132,199,0.1);
+  background: rgba(2,132,199,0.08);
   color: var(--accent-solid);
-  border: 2px solid rgba(2,132,199,0.2);
+  border: 1.5px solid rgba(2,132,199,0.18);
 }
 
 .source-btn-secondary:hover {
-  background: rgba(2,132,199,0.15);
-  border-color: rgba(2,132,199,0.4);
-  transform: translateY(-2px);
+  background: rgba(2,132,199,0.16);
+  border-color: rgba(2,132,199,0.32);
+  transform: translateY(-2.5px) scale(1.02);
 }
 
 /* Responsive */
 @media (max-width: 1400px) {
   .sources-grid {
     grid-template-columns: 1fr;
+    gap: 18px;
   }
 }
 
 @media (max-width: 768px) {
   .header h1 {
-    font-size: 36px;
+    font-size: 28px;
+    padding-bottom: 8px;
   }
-  
   .stats-overview {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
-  
+  .sources-grid {
+    gap: 10px;
+  }
   .source-card {
-    padding: 28px;
-    min-height: auto;
+    padding: 14px 4px 14px 4px;
+    min-height: unset;
+    border-radius: 14px;
   }
-  
   .source-header {
-    padding-right: 100px;
+    padding-right: 0;
+    gap: 10px;
   }
-  
   .source-actions {
     flex-direction: column;
+    gap: 6px;
   }
 }

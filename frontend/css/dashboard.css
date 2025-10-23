@@ -138,24 +138,24 @@
 /* Background images for each stat card */
 .stat-card:nth-child(1)::before {
   background: 
-    linear-gradient(180deg, rgba(16, 185, 129, 0.65) 0%, rgba(5, 150, 105, 0.7) 100%),
-    url('/agac-resimleri-rooteto4.jpg');
+    linear-gradient(180deg, rgba(16, 185, 129, 0.65) 0%, rgba(5, 150, 105, 0.4) 100%),
+    url('../images/Ağac.jpg');
   background-size: cover;
   background-position: center;
 }
 
 .stat-card:nth-child(2)::before {
   background: 
-    linear-gradient(180deg, rgba(107, 114, 128, 0.65) 0%, rgba(75, 85, 99, 0.7) 100%),
-    url('/R.jpg');
+    linear-gradient(180deg, rgba(107, 114, 128, 0.65) 0%, rgba(75, 85, 99, 0.5) 100%),
+    url('../images/Bina.jpg');
   background-size: cover;
   background-position: center;
 }
 
 .stat-card:nth-child(3)::before {
   background: 
-    linear-gradient(180deg, rgba(59, 130, 246, 0.65) 0%, rgba(37, 99, 235, 0.7) 100%),
-    url('/OIP (1).webp');
+    linear-gradient(180deg, rgba(59, 130, 246, 0.65) 0%, rgba(37, 99, 235, 0.3) 100%),
+    url('../images/Su.webp');
   background-size: cover;
   background-position: center;
 }
@@ -205,7 +205,7 @@
   overflow: hidden;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 680px;
+  min-height: 520px;
   display: flex;
   flex-direction: column;
   border-radius: 12px;
@@ -230,7 +230,7 @@
 .card:nth-child(1)::before {
   background: 
     linear-gradient(180deg, rgba(16, 185, 129, 0.0) 0%, rgba(5, 150, 105, 0.15) 100%),
-    url('/Emily-Lush-Istanbul-Turkey-sunset-Galata-Bridge.jpg');
+    url('../images/Istanbul.jpg');
   background-size: cover;
   background-position: center;
 }
@@ -239,27 +239,27 @@
 .card:nth-child(2)::before {
   background: 
     linear-gradient(180deg, rgba(107, 114, 128, 0.2) 0%, rgba(75, 85, 99, 0.5) 100%),
-    url('/OIP.webp');
-  background-size: cover;
-  background-position: center;
+    url('../images/Ankara.webp');
+  background-size: cover !important;
+  background-position: center !important;
 }
 
 /* İzmir - Sahil */
 .card:nth-child(3)::before {
   background: 
     linear-gradient(180deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.5) 100%),
-    url('/63280f8b1e3bc7.40466361.jpg');
-  background-size: cover;
-  background-position: center;
+    url('../images/İzmir.jpg');
+  background-size: cover !important;
+  background-position: center !important;
 }
 
 /* Bursa - Ulu Cami */
 .card:nth-child(4)::before {
   background: 
     linear-gradient(180deg, rgba(34, 197, 94, 0.2) 0%, rgba(22, 163, 74, 0.5) 100%),
-    url('/bursa-ulu-cami.jpeg');
-  background-size: cover;
-  background-position: center;
+    url('../images/Bursa.jpeg');
+  background-size: cover !important;
+  background-position: center !important;
 }
 
 .card:nth-child(4)::after {

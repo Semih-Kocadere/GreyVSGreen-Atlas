@@ -749,68 +749,55 @@ def get_istanbul_detailed_analysis(current_user: User = Depends(get_current_user
 # TREND TAHMİNİ API'LERİ (Trend Prediction Endpoints)
 # ============================================================================
 
+
+
+# ============================================================================
+# /api/trend/predict (Frontend için ana tahmin verisi endpointi)
+# ============================================================================
+from fastapi import Response
+
 @app.get("/api/trend/predict")
-def get_trend_prediction(
-    sequence_length: int = 8,
-    current_user: User = Depends(get_current_user)
-):
+def get_trend_predict(current_user: User = Depends(get_current_user)):
     """
-    Conv3D modeli ile t+1 tahminini döndürür.
-    
-    Kullanım: trend-prediction.html sayfasında tahmin gösterimi için
-    
-    Query Parametreleri:
-        sequence_length (int): Kaç geçmiş çeyrek kullanılacak (varsayılan: 8)
-    
-    Headers:
-        Authorization: Bearer <token>
-    
-    Döner:
-        dict: Tahmin istatistikleri ve metadata
-    
-    Örnek Response:
-        {
+    Trend tahmin verilerini döndürür (mock). Frontendin zaman çizelgesi ve harita için ana veri kaynağı.
+    """
+    # Örnek/mock veri (gerçek model çıktısı ile değiştirilebilir)
+    years = [f"2024 Q{i}" for i in range(1, 5)] + [f"2025 Q{i}" for i in range(1, 5)] + [f"2026 Q1"]
+    predictions = []
+    import numpy as np
+    for i, y in enumerate(years):
+        # 256x256 boyutunda, 0-2 arası değerlerden oluşan örnek bir mask (her yıl için farklı pattern)
+        mask = np.full((256, 256), i % 3, dtype=int)
+        # Alternatif: rastgele maske için aşağıdaki satırı kullanabilirsin
+        # mask = np.random.randint(0, 3, (256, 256)).tolist()
+        predictions.append({
+            "current": {
+                "timeframe": y,
+                "year": int(y.split()[0]),
+                "quarter": int(y.split()[1][1:]),
+                "green": 32.5 - i * 0.3,
+                "grey": 60.2 + i * 0.3,
+                "water": 7.3
+            },
             "prediction": {
-                "timeframe": "2025 Q1",
-                "green": 31.8,
-                "grey": 61.1,
-                "water": 7.1
+                "timeframe": years[min(i+1, len(years)-1)],
+                "year": int(years[min(i+1, len(years)-1)].split()[0]),
+                "quarter": int(years[min(i+1, len(years)-1)].split()[1][1:]),
+                "green": 32.5 - (i+1) * 0.3,
+                "grey": 60.2 + (i+1) * 0.3,
+                "water": 7.3
             },
-            "input_sequence": [
-                {"period": "2023 Q2", "green": 32.5, ...},
-                ...
-            ],
             "changes": {
-                "green": -0.7,
-                "grey": +0.9,
-                "water": -0.2
+                "green": -0.3,
+                "grey": +0.3,
+                "water": 0.0
             },
-            "confidence": {
-                "overall": 0.94,
-                "green": 0.93,
-                "grey": 0.95,
-                "water": 0.92
-            },
-            "metadata": {
-                "model": "Conv3D-Temporal",
-                "sequence_length": 8,
-                "timestamp": "2024-01-15T10:30:00"
-            }
-        }
-    """
-    
-    # trend_prediction_generate.py ile üretilen dosyadan oku
-    prediction_path = Path(__file__).parent / "data" / "trend_prediction.json"
-    if not prediction_path.exists():
-        raise HTTPException(404, "Hazır tahmin dosyası bulunamadı: backend/data/trend_prediction.json")
-    with open(prediction_path, "r", encoding="utf-8") as f:
-        predictions = json.load(f)
-    # Tüm yılların Q1 tahminlerini döndür
+            "class_mask": mask.tolist()
+        })
     return {
-        "years": [p["prediction"]["timeframe"] for p in predictions],
+        "years": years,
         "predictions": predictions
     }
-
 
 @app.get("/api/trend/historical")
 def get_trend_historical(
@@ -1075,6 +1062,196 @@ def get_available_tiles():
         "count": len(datasets)
     }
 
+# =========================================================================
+# TREND TILE (T+1) OVERLAY ENDPOINT (prediction_outputs_trend_tiles)
+# =========================================================================
+
+import io
+import numpy as np
+from PIL import Image
+from fastapi.responses import StreamingResponse
+import math
+
+@app.get("/api/trend/tiles/{year}/{quarter}/{z}/{x}/{y}.png")
+def get_trend_tile(year: int, quarter: int, z: int, x: int, y: int):
+    """
+    Trend tahmin maskesi tile'ı döndürür (t+1 Conv3D overlay).
+    prediction_outputs_trend_tiles klasöründeki .npy dosyalarını renklendirip PNG olarak sunar.
+    Sadece trend tile overlay için kullanılır.
+    """
+    # AOI
+    LON_MIN, LAT_MIN = 28.62, 40.75
+    LON_MAX, LAT_MAX = 29.56, 41.18
+    n = 2 ** z
+    lon_deg = (x + 0.5) / n * 360.0 - 180.0
+    lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * (y + 0.5) / n)))
+    lat_deg = math.degrees(lat_rad)
+    if not (LON_MIN <= lon_deg <= LON_MAX and LAT_MIN <= lat_deg <= LAT_MAX):
+        empty_img = Image.new('RGBA', (256, 256), (0, 0, 0, 0))
+        buf = io.BytesIO()
+        empty_img.save(buf, format='PNG')
+        buf.seek(0)
+        return StreamingResponse(buf, media_type='image/png')
+    lon_norm = (lon_deg - LON_MIN) / (LON_MAX - LON_MIN)
+    lat_norm = (lat_deg - LAT_MIN) / (LAT_MAX - LAT_MIN)
+    row_index = int((1.0 - lat_norm) * 18)
+    col_index = int(lon_norm * 40)
+    row_index = max(0, min(17, row_index))
+    col_index = max(0, min(39, col_index))
+    patch_row = row_index * 256
+    patch_col = col_index * 256
+    filename = f"{year}_Q{quarter}_{patch_row:05d}_{patch_col:05d}_trend_tplus1.npy"
+    patch_path = Path(__file__).parent / "data" / "prediction_outputs_trend_tiles" / filename
+    if not patch_path.exists():
+        empty_img = Image.new('RGBA', (256, 256), (0, 0, 0, 0))
+        buf = io.BytesIO()
+        empty_img.save(buf, format='PNG')
+        buf.seek(0)
+        return StreamingResponse(buf, media_type='image/png')
+    try:
+        arr = np.load(patch_path)
+        mask = np.argmax(arr, axis=0).astype(np.uint8)
+        palette = np.array([
+            [180, 180, 180],  # gri
+            [34, 139, 34],    # yeşil
+            [30, 144, 255]    # su
+        ], dtype=np.uint8)
+        rgb = palette[mask]
+        img = Image.fromarray(rgb, mode='RGB')
+    except Exception as e:
+        print(f"Trend tile görselleştirme hatası: {e}")
+        empty_img = Image.new('RGBA', (256, 256), (0, 0, 0, 0))
+        buf = io.BytesIO()
+        empty_img.save(buf, format='PNG')
+        buf.seek(0)
+        return StreamingResponse(buf, media_type='image/png')
+    buf = io.BytesIO()
+    img.save(buf, format='PNG', optimize=True)
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type='image/png',
+        headers={
+            'Cache-Control': 'public, max-age=86400',
+            'Access-Control-Allow-Origin': '*',
+        }
+    )
+
+# =========================================================================
+# FOLIUM HARİTA ENDPOINTİ (Trend Prediction için PNG olarak)
+# =========================================================================
+from fastapi.responses import FileResponse
+import tempfile
+import folium
+import base64
+import re
+
+
+# Folium harita endpointi: PNG tile'ları birleştirip folium haritasında overlay olarak gösterir (HTML döner)
+from fastapi import Request, Query, Header
+
+from fastapi.responses import HTMLResponse
+from pathlib import Path
+from PIL import Image
+import base64
+import io
+import re
+
+@app.get("/api/trend/folium_map/{year}/{quarter}")
+def get_trend_folium_map(year: int, quarter: int):
+    TILE_DIR = Path(__file__).parent / "data" / "prediction_outputs_trend_tiles"
+    tile_re = re.compile(rf"{year}_Q{quarter}_(\d{{5}})_(\d{{5}})_trend_tplus1\.png")
+    tiles = []
+    for f in TILE_DIR.glob(f"{year}_Q{quarter}_*_trend_tplus1.png"):
+        m = tile_re.match(f.name)
+        if m:
+            row = int(m.group(1))
+            col = int(m.group(2))
+            tiles.append((row, col, f))
+    if not tiles:
+        raise HTTPException(404, "Hiç PNG tile bulunamadı.")
+    tile_size = Image.open(tiles[0][2]).width
+    max_row = max(r for r,_,_ in tiles)
+    max_col = max(c for _,c,_ in tiles)
+    min_row = min(r for r,_,_ in tiles)
+    min_col = min(c for _,c,_ in tiles)
+    mosaic_h = (max_row - min_row) + tile_size
+    mosaic_w = (max_col - min_col) + tile_size
+    mosaic = Image.new("RGBA", (mosaic_w, mosaic_h), (0,0,0,0))
+    for row, col, f in tiles:
+        img = Image.open(f).convert("RGBA")
+        mosaic.paste(img, (col - min_col, row - min_row))
+    buf = io.BytesIO()
+    mosaic.save(buf, format="PNG")
+    data = base64.b64encode(buf.getvalue()).decode("utf-8")
+    url = f"data:image/png;base64,{data}"
+    html_str = f"""
+    <div style='width:100%;display:flex;justify-content:center;align-items:center;background:#f3f4f6;'>
+        <img src='{url}' alt='Tahmin Mozaik' style='max-width:100%;height:auto;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,0.12);margin:32px 0;'/>
+    </div>
+    """
+    return HTMLResponse(content=html_str, media_type="text/html")
+
+# =========================================================================
+# PNG TILE MOZAİK VE FOLIUM HARİTA ENDPOINTİ
+# =========================================================================
+from PIL import Image
+
+
+# PNG mozaik indirme endpointi kaldırıldı
+
+
+# Folium HTML indirme endpointi
+@app.get("/api/trend/folium_mosaic/{year}/{quarter}/html")
+def download_trend_folium_html(year: int, quarter: int, current_user: User = Depends(get_current_user)):
+    # Aynı mozaik PNG'yi oluştur ve folium haritası üret
+    TILE_DIR = Path(__file__).parent / "data" / "prediction_outputs_trend_tiles"
+    tile_files = list(TILE_DIR.glob(f"{year}_Q{quarter}_*_trend_tplus1.png"))
+    if not tile_files:
+        raise HTTPException(404, "Hiç PNG tile bulunamadı.")
+    import re
+    tile_re = re.compile(rf"{year}_Q{quarter}_(\\d{{5}})_(\\d{{5}})_trend_tplus1.png")
+    coords_files = [(tile_re.match(f.name), f) for f in tile_files]
+    coords_files = [(m, f) for m, f in coords_files if m]
+    if not coords_files:
+        raise HTTPException(500, "PNG tile dosya isimleri beklenen formatta değil (html endpoint)")
+    tile_size = 256
+    row_vals = [int(m.group(1)) for m, _ in coords_files]
+    col_vals = [int(m.group(2)) for m, _ in coords_files]
+    min_row, max_row = min(row_vals), max(row_vals)
+    min_col, max_col = min(col_vals), max(col_vals)
+    mosaic_w = (max_col - min_col) + tile_size
+    mosaic_h = (max_row - min_row) + tile_size
+    mosaic = Image.new('RGBA', (mosaic_w, mosaic_h))
+    for m, f in coords_files:
+        row = int(m.group(1))
+        col = int(m.group(2))
+        img = Image.open(f).convert('RGBA')
+        mosaic.paste(img, (col - min_col, row - min_row))
+    import tempfile
+    tmp_png = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+    mosaic.save(tmp_png.name)
+    tmp_png.flush()
+    import folium, base64
+    lat_min, lon_min = 40.8, 28.6
+    lat_max, lon_max = 41.4, 29.4
+    bounds = [[lat_min, lon_min], [lat_max, lon_max]]
+    center = [(lat_min + lat_max) / 2, (lon_min + lon_max) / 2]
+    m = folium.Map(location=center, zoom_start=12, tiles="CartoDB positron")
+    with open(tmp_png.name, "rb") as f:
+        data = base64.b64encode(f.read()).decode("utf-8")
+    url = f"data:image/png;base64,{data}"
+    folium.raster_layers.ImageOverlay(
+        image=url,
+        bounds=bounds,
+        opacity=0.75,
+        name=f"{year}_Q{quarter}_mosaic.png"
+    ).add_to(m)
+    folium.LayerControl(collapsed=False).add_to(m)
+    tmp_html = tempfile.NamedTemporaryFile(suffix='.html', delete=False)
+    m.save(tmp_html.name)
+    tmp_html.flush()
+    return FileResponse(tmp_html.name, media_type="text/html", filename=f"trend_folium_{year}_Q{quarter}.html")
 
 # ============================================================================
 # FRONTEND SUNUCU (Static Files Server)
