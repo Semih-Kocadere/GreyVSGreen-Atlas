@@ -36,57 +36,10 @@
 
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<style>
-  .map-outer {
-    position: relative;
-    width: 100%;
-    height: 60vh;
-    min-height: 400px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  #map {
-    min-height: 400px;
-    height: 100%;
-    width: 100%;
-    background: #e5e7eb;
-    border-radius: 12px;
-    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
-    margin-bottom: 24px;
-  }
-  #loading-overlay {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255,255,255,0.85);
-    z-index: 999;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-  }
-  .loading-spinner {
-    font-size: 48px;
-    animation: spin 1s linear infinite;
-    color: #10b981;
-    margin-bottom: 12px;
-  }
-  .loading-text {
-    font-size: 18px;
-    font-weight: 700;
-    color: #059669;
-    letter-spacing: 0.5px;
-  }
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-</style>
+<!-- Stil dosyaları trend-prediction.css'ye taşındı -->
 
 </head>
-<body>
+<body style="background: transparent;">
 <!-- Top Bar -->
 <header class="topbar">
   <div class="topbar-left">
@@ -186,43 +139,57 @@
   </aside>
   
   <main class="main">
-    <div class="header">
-      <h1>İstanbul Trend Tahmini</h1>
-      <p>Yapay zeka ile gelecek dönem yeşil alan, beton ve su kaynaklarının tahmini</p>
-    </div>
-
-    <!-- Kontrol Paneli -->
-    <div class="control-panel" aria-label="Harita ve Overlay Kontrolleri">
-      <div class="control-group">
-        <label for="mode-prediction">📅 Görüntüleme Modu</label>
-        <div class="mode-buttons" role="group" aria-label="Görüntüleme Modu">
-          <button class="mode-btn active" id="mode-prediction" data-mode="prediction" aria-pressed="true">Tahmin</button>
-          <button class="mode-btn" id="mode-comparison" data-mode="comparison" aria-pressed="false">Karşılaştırma</button>
-          <button class="mode-btn" id="mode-difference" data-mode="difference" aria-pressed="false">Fark Analizi</button>
-        </div>
-      </div>
-      <div class="control-group">
-        <label for="opacity-slider">🎨 Overlay Şeffaflık</label>
-        <input type="range" id="opacity-slider" min="0" max="100" value="70" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" />
-        <span id="opacity-value">70%</span>
-      </div>
-      <div class="control-group">
-        <label>🔍 Katman Seçimi</label>
-        <div class="layer-checkboxes" role="group" aria-label="Katman Seçimi">
-          <label><input type="checkbox" id="layer-green" checked aria-checked="true" /> 🌳 Yeşil Alan</label>
-          <label><input type="checkbox" id="layer-gray" checked aria-checked="true" /> 🏢 Beton</label>
-          <label><input type="checkbox" id="layer-water" checked aria-checked="true" /> 💧 Su</label>
-        </div>
+    <div class="header dashboard-header">
+      <h1 class="dashboard-title">
+        <span class="dashboard-icon">🌱</span>
+        <span>İstanbul Trend Tahmini</span>
+      </h1>
+      <div class="dashboard-desc">
+        Geleceğin İstanbul'u için <span class="highlight-green">yeşil alan</span>, <span class="highlight-grey">beton</span> ve <span class="highlight-water">su kaynakları</span> tahmini. Şehrin ekolojik dönüşümünü keşfedin.
       </div>
     </div>
 
-    <!-- Harita Konteyneri -->
-    <div class="map-container">
+
+  <!-- Harita Konteyneri -->
+  <div class="map-container" style="position:relative;">
       <div class="map-outer">
+        <!-- Sol üst: Modern Görüntüleme Modu Paneli -->
+        <div class="floating-mode-panel left-panel">
+          <div class="modern-panel">
+            <div class="modern-panel-title">Görüntüleme Modu</div>
+            <div class="modern-mode-buttons" role="group" aria-label="Görüntüleme Modu">
+              <button class="modern-mode-btn active" id="mode-prediction" data-mode="prediction" aria-pressed="true">Tahmin</button>
+              <button class="modern-mode-btn" id="mode-comparison" data-mode="comparison" aria-pressed="false">Karşılaştırma</button>
+            </div>
+          </div>
+        </div>
+        <!-- Sağ üst: Modern Overlay Şeffaflık Paneli -->
+        <div class="floating-opacity-panel right-panel">
+          <div class="modern-panel">
+            <div class="modern-panel-title">Overlay Şeffaflık</div>
+            <div class="modern-slider-row">
+              <input type="range" id="opacity-slider" min="0" max="100" value="70" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" class="modern-slider" />
+              <span id="opacity-value" class="modern-slider-value">70%</span>
+            </div>
+          </div>
+        </div>
+        <!-- Üst orta: Modern Horizon Paneli -->
+        <div class="floating-horizon-panel top-center-panel">
+          <div class="modern-panel">
+            <div class="modern-horizon-group">
+              <label for="horizon-select" class="modern-horizon-label">Tahmini Horizon</label>
+              <select id="horizon-select" class="modern-horizon-select">
+                <option value="1">t+1 (1 Çeyrek)</option>
+                <option value="4">t+4 (1 Yıl)</option>
+                <option value="8">t+8 (2 Yıl)</option>
+              </select>
+            </div>
+          </div>
+        </div>
         <div id="map" class="map" aria-label="Tahmin Haritası"></div>
-        <canvas id="mask-canvas" width="256" height="256" style="position:absolute;top:0;left:0;z-index:500;pointer-events:none;display:none;"></canvas>
+        <canvas id="mask-canvas" width="256" height="256" class="mask-canvas"></canvas>
         <!-- Loading animasyonu -->
-        <div id="loading-overlay">
+        <div id="loading-overlay" class="loading-overlay">
           <div class="loading-spinner">⏳</div>
           <div class="loading-text">Harita yükleniyor...</div>
         </div>
@@ -251,99 +218,71 @@
       </div>
     </div>
 
-    <!-- Timeline Slider -->
+    <!-- Timeline Slider + Horizon Dropdown -->
     <div class="timeline-container">
-      <div class="timeline-header">
-        <h3>⏱️ Zaman Çizelgesi</h3>
-        <div class="timeline-info">
-          <span class="current-period" id="current-period">2024 Q4</span>
-          <span class="prediction-period" id="prediction-period">→ 2025 Q1 (Tahmin)</span>
+      <!-- Trend Chart -->
+      <!-- Folium Harita ve İndirme Butonu Alanı -->
+      <div id="folium-map-section" class="folium-map-section">
+        <div class="folium-section-title" style="font-size:1.35rem;font-weight:600;color:#10b981;margin-bottom:12px;letter-spacing:0.01em;">Folium Mozaik Haritası</div>
+        <div id="folium-map-container" class="folium-map-container"><!-- Burada folium haritası gösterilecek -->
+          <span style="color:#6b7280;">Tahmin haritası burada görünecek</span>
         </div>
+        <!-- İndirme butonu kaldırıldı -->
       </div>
-      
-      <div class="timeline-slider">
-        <input type="range" id="time-slider" min="0" max="20" value="15" step="1" aria-valuenow="15" aria-valuemin="0" aria-valuemax="20" />
-        <div class="timeline-labels" id="timeline-labels" aria-label="Zaman Dilimleri"></div>
-      </div>
-      
-      <div class="timeline-controls">
-        <button class="timeline-btn" id="play-btn">▶️ Oynat</button>
-        <button class="timeline-btn" id="stop-btn">⏹️ Durdur</button>
-        <button class="timeline-btn" id="reset-btn">🔄 Sıfırla</button>
-        <div class="playback-speed">
-          <label>Hız:</label>
-          <select id="speed-select">
-            <option value="2000">Yavaş</option>
-            <option value="1000" selected>Normal</option>
-            <option value="500">Hızlı</option>
-          </select>
-        </div>
-      </div>
-    </div>
 
-    <!-- Trend Chart -->
-    <!-- Folium Harita ve İndirme Butonu Alanı -->
-    <div id="folium-map-section" style="margin:32px 0 0 0; display:flex; flex-direction:column; align-items:center;">
-  <div id="folium-map-container" style="width:100%; min-height:600px; max-width:1400px; border-radius:12px; box-shadow:0 2px 16px rgba(0,0,0,0.08); background:#f3f4f6; display:flex; align-items:center; justify-content:center;">
-        <!-- Burada folium haritası gösterilecek -->
-        <span style="color:#6b7280;">Tahmin haritası burada görünecek</span>
+      <!-- İstatistik Kartları -->
+      <div class="stats-container">
+        <div class="stat-card-trend">
+          <div class="stat-icon">🌳</div>
+          <div class="stat-content">
+            <div class="stat-label">Yeşil Alan</div>
+            <div class="stat-value">
+              <span id="stat-green-current">32.5%</span>
+              <span class="stat-arrow">→</span>
+              <span id="stat-green-predicted" class="predicted">31.8%</span>
+            </div>
+            <div class="stat-change negative" id="stat-green-change">-0.7%</div>
+          </div>
+        </div>
+        
+        <div class="stat-card-trend">
+          <div class="stat-icon">🏢</div>
+          <div class="stat-content">
+            <div class="stat-label">Beton Alan</div>
+            <div class="stat-value">
+              <span id="stat-gray-current">60.2%</span>
+              <span class="stat-arrow">→</span>
+              <span id="stat-gray-predicted" class="predicted">61.1%</span>
+            </div>
+            <div class="stat-change positive" id="stat-gray-change">+0.9%</div>
+          </div>
+        </div>
+        
+        <div class="stat-card-trend">
+          <div class="stat-icon">💧</div>
+          <div class="stat-content">
+            <div class="stat-label">Su Kaynakları</div>
+            <div class="stat-value">
+              <span id="stat-water-current">7.3%</span>
+              <span class="stat-arrow">→</span>
+              <span id="stat-water-predicted" class="predicted">7.1%</span>
+            </div>
+            <div class="stat-change negative" id="stat-water-change">-0.2%</div>
+          </div>
+        </div>
       </div>
-  <!-- İndirme butonu kaldırıldı -->
-    </div>
 
-    <!-- İstatistik Kartları -->
-    <div class="stats-container">
-      <div class="stat-card-trend">
-        <div class="stat-icon">🌳</div>
-        <div class="stat-content">
-          <div class="stat-label">Yeşil Alan</div>
-          <div class="stat-value">
-            <span id="stat-green-current">32.5%</span>
-            <span class="stat-arrow">→</span>
-            <span id="stat-green-predicted" class="predicted">31.8%</span>
-          </div>
-          <div class="stat-change negative" id="stat-green-change">-0.7%</div>
+      <!-- Bilgi Notu -->
+      <div class="info-box">
+        <div class="info-icon">ℹ️</div>
+        <div class="info-content">
+          <strong>Model Hakkında:</strong> Bu tahminler, 2018-2024 arası Sentinel-2 uydu görüntüleri kullanılarak
+          eğitilmiş UNET (segmentasyon) ve Conv3D (temporal prediction) derin öğrenme modelleriyle üretilmiştir.
+          Model, son 8 çeyrek dönemi (2 yıl) kullanarak bir sonraki çeyrek tahmini yapmaktadır.
+          Ortalama doğruluk: <strong>~94%</strong> (Pixel Accuracy), <strong>~91%</strong> (mIoU).
         </div>
       </div>
-      
-      <div class="stat-card-trend">
-        <div class="stat-icon">🏢</div>
-        <div class="stat-content">
-          <div class="stat-label">Beton Alan</div>
-          <div class="stat-value">
-            <span id="stat-gray-current">60.2%</span>
-            <span class="stat-arrow">→</span>
-            <span id="stat-gray-predicted" class="predicted">61.1%</span>
-          </div>
-          <div class="stat-change positive" id="stat-gray-change">+0.9%</div>
-        </div>
-      </div>
-      
-      <div class="stat-card-trend">
-        <div class="stat-icon">💧</div>
-        <div class="stat-content">
-          <div class="stat-label">Su Kaynakları</div>
-          <div class="stat-value">
-            <span id="stat-water-current">7.3%</span>
-            <span class="stat-arrow">→</span>
-            <span id="stat-water-predicted" class="predicted">7.1%</span>
-          </div>
-          <div class="stat-change negative" id="stat-water-change">-0.2%</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bilgi Notu -->
-    <div class="info-box">
-      <div class="info-icon">ℹ️</div>
-      <div class="info-content">
-        <strong>Model Hakkında:</strong> Bu tahminler, 2018-2024 arası Sentinel-2 uydu görüntüleri kullanılarak
-        eğitilmiş UNET (segmentasyon) ve Conv3D (temporal prediction) derin öğrenme modelleriyle üretilmiştir.
-        Model, son 8 çeyrek dönemi (2 yıl) kullanarak bir sonraki çeyrek tahmini yapmaktadır.
-        Ortalama doğruluk: <strong>~94%</strong> (Pixel Accuracy), <strong>~91%</strong> (mIoU).
-      </div>
-    </div>
-  </main>
+    </main>
 </div>
 
 <!-- Leaflet JS -->
@@ -392,7 +331,6 @@ document.getElementById('logout').onclick = () => {
 // GLOBAL DEĞİŞKENLER
 // ============================================================================
 let predictionData = null; // API'den gelen tüm tahmin dizisi
-let currentIndex = 0; // Slider'daki aktif yıl
 let overlayLayer = null; // Harita overlay katmanı
 
 // ============================================================================
@@ -409,24 +347,14 @@ async function loadPredictionData() {
     }
     const data = await response.json();
     predictionData = data;
-    // Slider'ı API'den gelen yıllara göre ayarla
-    const years = data.years;
-    const slider = document.getElementById('time-slider');
-    slider.min = 0;
-    slider.max = years.length - 1;
-    slider.value = years.length - 1;
-    currentIndex = years.length - 1;
-    updateTimelineLabels(years);
     updateUI();
     createTrendChart();
     console.log('Tahmin verisi yüklendi:', predictionData);
   } catch (error) {
     console.error('Tahmin yükleme hatası:', error);
     showErrorMessage('Tahmin verisi yüklenemedi. Lütfen modellerin yüklendiğinden emin olun.');
-    // Hata olsa da harita görünür kalsın, loading overlay'i kapat
     showLoading(false);
   } finally {
-    // Sadece başarılı yüklemede değil, her durumda loading overlay'i kapat
     showLoading(false);
   }
 }
@@ -500,29 +428,19 @@ function createTrendChart() {
   });
 }
 
-// Timeline label'larını doldur
-function updateTimelineLabels(years) {
-  const labelsDiv = document.getElementById('timeline-labels');
-  if (!labelsDiv || !years) return;
-  labelsDiv.innerHTML = '';
-  const slider = document.getElementById('time-slider');
-  const sliderWidth = slider.offsetWidth || 600;
-  years.forEach((y, i) => {
-    const label = document.createElement('div');
-    label.className = 'timeline-label' + (i === currentIndex ? ' active' : '');
-    label.textContent = y;
-    label.style.left = ((i / (years.length - 1)) * 100) + '%';
-    labelsDiv.appendChild(label);
-  });
-}
-
+// Timeline ve slider kodları kaldırıldı
 function updateUI() {
   if (!predictionData) return;
-  const idx = currentIndex;
-  const pred = predictionData.predictions[idx];
-  // Dönem bilgilerini güncelle
-  document.getElementById('current-period').textContent = pred.current.timeframe;
-  document.getElementById('prediction-period').textContent = `→ ${pred.prediction.timeframe} (Tahmin)`;
+  // Horizon dropdown ile seçilen tahmini bul
+  const horizonValue = document.getElementById('horizon-select').value;
+  // Uygun tahmini bul
+  let pred = null;
+  if (predictionData.predictions && Array.isArray(predictionData.predictions)) {
+    pred = predictionData.predictions.find(p => String(p.horizon) === String(horizonValue));
+    // Eğer horizon yoksa ilk tahmini göster
+    if (!pred) pred = predictionData.predictions[0];
+  }
+  if (!pred) return;
   // İstatistik kartlarını güncelle
   updateStatCard('green', pred.current.green, pred.prediction.green, pred.changes.green);
   updateStatCard('gray', pred.current.grey, pred.prediction.grey, pred.changes.grey);
@@ -613,8 +531,8 @@ function addPredictionOverlay(pred) {
     }
     ctx.putImageData(imgData, 0, 0);
     const dataUrl = canvas.toDataURL('image/png');
-    // İstanbul için bounds
-    const bounds = [[40.8, 28.6], [41.4, 29.4]];
+    // Backend AOI ile birebir bounds
+    const bounds = [[40.75, 28.62], [41.18, 29.56]];
     const layer = L.imageOverlay(dataUrl, bounds, {opacity: 0.7});
     layer.addTo(map);
     window.overlayLayers.push(layer);
@@ -649,24 +567,39 @@ function showErrorMessage(message) {
 
 // --- HARİTA BAŞLATMA VE TREND TILE LAYER ---
 window.addEventListener('DOMContentLoaded', () => {
-  // Harita container'ı tam oturmazsa, boyutunu güncelle
-  setTimeout(() => {
-    if (window.map) window.map.invalidateSize();
-  }, 400);
+  // Backend AOI ile birebir bounds
   const istanbulBounds = [[40.75, 28.62], [41.18, 29.56]];
   window.map = L.map('map', {
     center: [40.965, 29.09],
-    zoom: 11,
-    minZoom: 10,
-    maxZoom: 18,
+    zoom: 13, // Başlangıçta tile'ların görüneceği bir zoom
+    minZoom: 12,
+    maxZoom: 15,
     zoomControl: true,
     scrollWheelZoom: true,
     doubleClickZoom: false,
     dragging: true,
     zoomSnap: 0.10,
     zoomDelta: 0.5,
-    wheelPxPerZoomLevel: 120
+    wheelPxPerZoomLevel: 120,
+    maxBounds: istanbulBounds,
+    maxBoundsViscosity: 1.0
   });
+  window.map.fitBounds(istanbulBounds);
+
+  // Tile layer'ı her zaman ekle
+  window.currentTrendYear = 2026;
+  window.currentTrendQuarter = 1;
+  window.trendOpacity = 0.7;
+  const tileUrl = `/api/trend/tiles/${window.currentTrendYear}/${window.currentTrendQuarter}/{z}/{x}/{y}.png`;
+  window.trendTileLayer = L.tileLayer(tileUrl, {
+    attribution: 'Trend Prediction',
+    minZoom: 12,
+    maxZoom: 15,
+    opacity: window.trendOpacity,
+    tileSize: 256
+  });
+  window.trendTileLayer.addTo(window.map);
+
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap',
     maxZoom: 18
@@ -728,7 +661,7 @@ let mapCompare = null;
 // ============================================================================
 // MOD DEĞİŞTİRME
 // ============================================================================
-const modeButtons = document.querySelectorAll('.mode-btn');
+const modeButtons = document.querySelectorAll('.modern-mode-btn');
 const mapElement = document.getElementById('map');
 const mapCompareElement = document.getElementById('map-compare');
 
@@ -801,74 +734,16 @@ const layerToggles = {
 let visibleLayers = { green: true, gray: true, water: true };
 
 Object.keys(layerToggles).forEach(layerName => {
-  layerToggles[layerName].onchange = (e) => {
-    visibleLayers[layerName] = e.target.checked;
-    updateUI(); // Katman değişince overlay güncellensin
-    console.log(`Layer ${layerName}: ${visibleLayers[layerName] ? 'visible' : 'hidden'}`);
-  };
+  if (layerToggles[layerName]) {
+    layerToggles[layerName].onchange = (e) => {
+      visibleLayers[layerName] = e.target.checked;
+      updateUI(); // Katman değişince overlay güncellensin
+      console.log(`Layer ${layerName}: ${visibleLayers[layerName] ? 'visible' : 'hidden'}`);
+    };
+  }
 });
 
-// ============================================================================
-// TIMELINE KONTROLÜ
-// ============================================================================
-const timeSlider = document.getElementById('time-slider');
-const currentPeriod = document.getElementById('current-period');
-const predictionPeriod = document.getElementById('prediction-period');
-const timelineLabels = document.getElementById('timeline-labels');
-
-// Slider input ile ilgili yılın tahminini göster
-timeSlider.oninput = () => {
-  currentIndex = parseInt(timeSlider.value);
-  updateUI();
-  // Label güncellemesi
-  if (predictionData && predictionData.years) {
-    currentPeriod.textContent = predictionData.predictions[currentIndex].current.timeframe;
-    predictionPeriod.textContent = `→ ${predictionData.predictions[currentIndex].prediction.timeframe} (Tahmin)`;
-  }
-  console.log(`Timeline değişti: ${currentIndex}`);
-};
-
-// ============================================================================
-// PLAYBACK KONTROLÜ
-// ============================================================================
-let playbackInterval = null;
-const playBtn = document.getElementById('play-btn');
-const stopBtn = document.getElementById('stop-btn');
-const resetBtn = document.getElementById('reset-btn');
-const speedSelect = document.getElementById('speed-select');
-
-playBtn.onclick = () => {
-  if (playbackInterval) return; // Zaten oynatılıyor
-  
-  const speed = parseInt(speedSelect.value);
-  playbackInterval = setInterval(() => {
-    let current = parseInt(timeSlider.value);
-    if (current < parseInt(timeSlider.max)) {
-      timeSlider.value = current + 1;
-      timeSlider.oninput();
-    } else {
-      stopBtn.click();
-    }
-  }, speed);
-  
-  playBtn.disabled = true;
-  stopBtn.disabled = false;
-};
-
-stopBtn.onclick = () => {
-  if (playbackInterval) {
-    clearInterval(playbackInterval);
-    playbackInterval = null;
-  }
-  playBtn.disabled = false;
-  stopBtn.disabled = true;
-};
-
-resetBtn.onclick = () => {
-  stopBtn.click();
-  timeSlider.value = 0;
-  timeSlider.oninput();
-};
+// Timeline ve slider ile ilgili tüm kodlar kaldırıldı
 
 // ============================================================================
 // SIDEBAR AÇ/KAPA
@@ -931,8 +806,14 @@ document.addEventListener('mouseup', () => {
   }, 100);
 });
 
-// Başlangıç ayarı
-timeSlider.oninput();
+// Horizon dropdown değişince UI güncellensin
+const horizonSelect = document.getElementById('horizon-select');
+if (horizonSelect) {
+  horizonSelect.addEventListener('change', () => {
+    updateUI();
+    showFoliumMapIframe();
+  });
+}
 
 // ============================================================================
 // SAYFA YÜKLENDİĞİNDE VERİ YÜKLE
@@ -982,27 +863,33 @@ async function showMosaicImage() {
 async function showFoliumMapIframe() {
   const year = window.currentTrendYear || 2026;
   const quarter = window.currentTrendQuarter || 1;
+  const horizon = document.getElementById('horizon-select')?.value || 1;
   const token = localStorage.getItem('token');
   const foliumContainer = document.getElementById('folium-map-container');
   if (foliumContainer) {
-    // Folium haritası endpointi token gerektiriyorsa ekle
-    let foliumUrl = `/api/trend/folium_map/${year}/${quarter}`;
+    let foliumUrl = `/api/trend/folium_map/${year}/${quarter}/${horizon}`;
     if (token) foliumUrl += `?token=${encodeURIComponent(token)}`;
     foliumContainer.innerHTML = '';
-    const iframe = document.createElement('iframe');
-    iframe.src = foliumUrl;
+  const iframe = document.createElement('iframe');
+  iframe.src = foliumUrl;
   iframe.style.width = '100%';
-  iframe.style.minHeight = '800px';
-  iframe.style.height = '800px';
-    iframe.style.border = 'none';
-    iframe.style.borderRadius = '12px';
-    foliumContainer.appendChild(iframe);
+  iframe.style.height = '100%';
+  iframe.style.border = 'none';
+  iframe.style.borderRadius = '12px';
+  iframe.style.display = 'block';
+  foliumContainer.appendChild(iframe);
   }
 }
 
-// --- Sayfa yüklenince folium haritasını otomatik göster ---
+// --- Sayfa yüklenince ve horizon değişince folium haritasını otomatik göster ---
 window.addEventListener('DOMContentLoaded', () => {
   showFoliumMapIframe();
+  const horizonSelect = document.getElementById('horizon-select');
+  if (horizonSelect) {
+    horizonSelect.addEventListener('change', () => {
+      showFoliumMapIframe();
+    });
+  }
 });
 
 // İndirme butonu ve fonksiyonu kaldırıldı

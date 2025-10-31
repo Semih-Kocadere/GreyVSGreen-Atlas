@@ -166,6 +166,8 @@ class ModelService:
     def __init__(self):
         self.unet_model = None
         self.conv3d_model = None
+        self.conv3d_model_tplus4 = None
+        self.conv3d_model_tplus8 = None
         self.mean_stats = None
         self.std_stats = None
         self.loaded = False
@@ -214,17 +216,39 @@ class ModelService:
         self.unet_model.eval()
         print(f"  ✓ UNET modeli yüklendi")
         
-        # 3. Conv3D yükle
+        # 3. Conv3D modelleri yükle
+        # t+1
         if not CONV3D_PATH.exists():
-            print(f"  ⚠ Conv3D modeli bulunamadı: {CONV3D_PATH}")
-            print(f"    Temporal tahmin yapılamayacak (sadece UNET çalışacak)")
+            print(f"  ⚠ Conv3D t+1 modeli bulunamadı: {CONV3D_PATH}")
             self.conv3d_model = None
         else:
             self.conv3d_model = Tiny3D(in_channels=4, sequence_length=8).to(DEVICE)
             checkpoint = torch.load(CONV3D_PATH, map_location=DEVICE)
             self.conv3d_model.load_state_dict(checkpoint["model_state_dict"])
             self.conv3d_model.eval()
-            print(f"  ✓ Conv3D modeli yüklendi")
+            print(f"  ✓ Conv3D t+1 modeli yüklendi")
+        # t+4
+        conv3d_tplus4_path = MODEL_DIR / "temporal3d_tplus4.pt"
+        if not conv3d_tplus4_path.exists():
+            print(f"  ⚠ Conv3D t+4 modeli bulunamadı: {conv3d_tplus4_path}")
+            self.conv3d_model_tplus4 = None
+        else:
+            self.conv3d_model_tplus4 = Tiny3D(in_channels=4, sequence_length=12).to(DEVICE)
+            checkpoint = torch.load(conv3d_tplus4_path, map_location=DEVICE)
+            self.conv3d_model_tplus4.load_state_dict(checkpoint["model_state_dict"])
+            self.conv3d_model_tplus4.eval()
+            print(f"  ✓ Conv3D t+4 modeli yüklendi")
+        # t+8
+        conv3d_tplus8_path = MODEL_DIR / "temporal3d_tplus8.pt"
+        if not conv3d_tplus8_path.exists():
+            print(f"  ⚠ Conv3D t+8 modeli bulunamadı: {conv3d_tplus8_path}")
+            self.conv3d_model_tplus8 = None
+        else:
+            self.conv3d_model_tplus8 = Tiny3D(in_channels=4, sequence_length=16).to(DEVICE)
+            checkpoint = torch.load(conv3d_tplus8_path, map_location=DEVICE)
+            self.conv3d_model_tplus8.load_state_dict(checkpoint["model_state_dict"])
+            self.conv3d_model_tplus8.eval()
+            print(f"  ✓ Conv3D t+8 modeli yüklendi")
         
         self.loaded = True
         torch.backends.cudnn.benchmark = True
@@ -265,36 +289,61 @@ class ModelService:
         
         return softmax.cpu().numpy().astype(np.float32)
     
-    def predict_temporal(
-        self,
-        softmax_sequence: List[np.ndarray]
-    ) -> np.ndarray:
+    def predict_temporal(self, softmax_sequence: List[np.ndarray]) -> np.ndarray:
         """
         8 çeyreklik softmax dizisinden t+1 tahmini yap.
-        
         Args:
             softmax_sequence: List of (4, H, W) softmax arrays (8 adet)
-        
         Returns:
             prediction: (4, H, W) softmax for t+1
         """
         if not self.loaded or self.conv3d_model is None:
-            raise RuntimeError("Conv3D modeli yüklenmemiş!")
-        
+            raise RuntimeError("Conv3D t+1 modeli yüklenmemiş!")
         if len(softmax_sequence) != 8:
             raise ValueError(f"8 çeyrek gerekli, {len(softmax_sequence)} geldi")
-        
-        # [T, 4, H, W] dizisi oluştur
         sequence = np.stack(softmax_sequence, axis=0)  # [8, 4, H, W]
-        
-        # Tensor'a çevir
         x = torch.from_numpy(sequence).unsqueeze(0).to(DEVICE)  # [1, 8, 4, H, W]
-        
-        # Conv3D inference
         with torch.no_grad():
             logits = self.conv3d_model(x)  # [1, 4, H, W]
             prediction = torch.softmax(logits, dim=1)[0]  # [4, H, W]
-        
+        return prediction.cpu().numpy().astype(np.float32)
+
+    def predict_temporal_tplus4(self, softmax_sequence: List[np.ndarray]) -> np.ndarray:
+        """
+        12 çeyreklik softmax dizisinden t+4 tahmini yap.
+        Args:
+            softmax_sequence: List of (4, H, W) softmax arrays (12 adet)
+        Returns:
+            prediction: (4, H, W) softmax for t+4
+        """
+        if not self.loaded or self.conv3d_model_tplus4 is None:
+            raise RuntimeError("Conv3D t+4 modeli yüklenmemiş!")
+        if len(softmax_sequence) != 12:
+            raise ValueError(f"12 çeyrek gerekli, {len(softmax_sequence)} geldi")
+        sequence = np.stack(softmax_sequence, axis=0)  # [12, 4, H, W]
+        x = torch.from_numpy(sequence).unsqueeze(0).to(DEVICE)  # [1, 12, 4, H, W]
+        with torch.no_grad():
+            logits = self.conv3d_model_tplus4(x)  # [1, 4, H, W]
+            prediction = torch.softmax(logits, dim=1)[0]  # [4, H, W]
+        return prediction.cpu().numpy().astype(np.float32)
+
+    def predict_temporal_tplus8(self, softmax_sequence: List[np.ndarray]) -> np.ndarray:
+        """
+        16 çeyreklik softmax dizisinden t+8 tahmini yap.
+        Args:
+            softmax_sequence: List of (4, H, W) softmax arrays (16 adet)
+        Returns:
+            prediction: (4, H, W) softmax for t+8
+        """
+        if not self.loaded or self.conv3d_model_tplus8 is None:
+            raise RuntimeError("Conv3D t+8 modeli yüklenmemiş!")
+        if len(softmax_sequence) != 16:
+            raise ValueError(f"16 çeyrek gerekli, {len(softmax_sequence)} geldi")
+        sequence = np.stack(softmax_sequence, axis=0)  # [16, 4, H, W]
+        x = torch.from_numpy(sequence).unsqueeze(0).to(DEVICE)  # [1, 16, 4, H, W]
+        with torch.no_grad():
+            logits = self.conv3d_model_tplus8(x)  # [1, 4, H, W]
+            prediction = torch.softmax(logits, dim=1)[0]  # [4, H, W]
         return prediction.cpu().numpy().astype(np.float32)
 
 

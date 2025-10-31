@@ -1157,19 +1157,20 @@ import base64
 import io
 import re
 
-@app.get("/api/trend/folium_map/{year}/{quarter}")
-def get_trend_folium_map(year: int, quarter: int):
+@app.get("/api/trend/folium_map/{year}/{quarter}/{horizon}")
+def get_trend_folium_map(year: int, quarter: int, horizon: int):
     TILE_DIR = Path(__file__).parent / "data" / "prediction_outputs_trend_tiles"
-    tile_re = re.compile(rf"{year}_Q{quarter}_(\d{{5}})_(\d{{5}})_trend_tplus1\.png")
+    suffix = f"tplus{horizon}"
+    tile_re = re.compile(rf"{year}_Q{quarter}_(\d{{5}})_(\d{{5}})_trend_{suffix}\.png")
     tiles = []
-    for f in TILE_DIR.glob(f"{year}_Q{quarter}_*_trend_tplus1.png"):
+    for f in TILE_DIR.glob(f"{year}_Q{quarter}_*_trend_{suffix}.png"):
         m = tile_re.match(f.name)
         if m:
             row = int(m.group(1))
             col = int(m.group(2))
             tiles.append((row, col, f))
     if not tiles:
-        raise HTTPException(404, "Hiç PNG tile bulunamadı.")
+        raise HTTPException(404, f"Hiç PNG tile bulunamadı (horizon={horizon}).")
     tile_size = Image.open(tiles[0][2]).width
     max_row = max(r for r,_,_ in tiles)
     max_col = max(c for _,c,_ in tiles)
@@ -1202,19 +1203,20 @@ from PIL import Image
 
 
 # Folium HTML indirme endpointi
-@app.get("/api/trend/folium_mosaic/{year}/{quarter}/html")
-def download_trend_folium_html(year: int, quarter: int, current_user: User = Depends(get_current_user)):
+@app.get("/api/trend/folium_mosaic/{year}/{quarter}/{horizon}/html")
+def download_trend_folium_html(year: int, quarter: int, horizon: int, current_user: User = Depends(get_current_user)):
     # Aynı mozaik PNG'yi oluştur ve folium haritası üret
     TILE_DIR = Path(__file__).parent / "data" / "prediction_outputs_trend_tiles"
-    tile_files = list(TILE_DIR.glob(f"{year}_Q{quarter}_*_trend_tplus1.png"))
+    suffix = f"tplus{horizon}"
+    tile_files = list(TILE_DIR.glob(f"{year}_Q{quarter}_*_trend_{suffix}.png"))
     if not tile_files:
-        raise HTTPException(404, "Hiç PNG tile bulunamadı.")
+        raise HTTPException(404, f"Hiç PNG tile bulunamadı (horizon={horizon}).")
     import re
-    tile_re = re.compile(rf"{year}_Q{quarter}_(\\d{{5}})_(\\d{{5}})_trend_tplus1.png")
+    tile_re = re.compile(rf"{year}_Q{quarter}_(\\d{{5}})_(\\d{{5}})_trend_{suffix}.png")
     coords_files = [(tile_re.match(f.name), f) for f in tile_files]
     coords_files = [(m, f) for m, f in coords_files if m]
     if not coords_files:
-        raise HTTPException(500, "PNG tile dosya isimleri beklenen formatta değil (html endpoint)")
+        raise HTTPException(500, f"PNG tile dosya isimleri beklenen formatta değil (horizon={horizon})")
     tile_size = 256
     row_vals = [int(m.group(1)) for m, _ in coords_files]
     col_vals = [int(m.group(2)) for m, _ in coords_files]
@@ -1245,13 +1247,13 @@ def download_trend_folium_html(year: int, quarter: int, current_user: User = Dep
         image=url,
         bounds=bounds,
         opacity=0.75,
-        name=f"{year}_Q{quarter}_mosaic.png"
+        name=f"{year}_Q{quarter}_mosaic_{suffix}.png"
     ).add_to(m)
     folium.LayerControl(collapsed=False).add_to(m)
     tmp_html = tempfile.NamedTemporaryFile(suffix='.html', delete=False)
     m.save(tmp_html.name)
     tmp_html.flush()
-    return FileResponse(tmp_html.name, media_type="text/html", filename=f"trend_folium_{year}_Q{quarter}.html")
+    return FileResponse(tmp_html.name, media_type="text/html", filename=f"trend_folium_{year}_Q{quarter}_{suffix}.html")
 
 # ============================================================================
 # FRONTEND SUNUCU (Static Files Server)

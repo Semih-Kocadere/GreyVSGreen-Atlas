@@ -1,17 +1,352 @@
+/* Üst orta horizon paneli */
+.floating-horizon-panel.top-center-panel {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+}
+/* Modern horizon dropdown styles */
+.modern-horizon-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255,255,255,0.96);
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(16,185,129,0.08);
+  padding: 16px 24px;
+  margin-bottom: 18px;
+  width: fit-content;
+}
+.modern-horizon-label {
+  font-size: 16px;
+  font-weight: 800;
+  color: #059669;
+  letter-spacing: 0.2px;
+}
+.modern-horizon-select {
+  padding: 10px 22px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  background: #f8fafc;
+  color: #059669;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.04);
+  transition: border-color 0.2s;
+  outline: none;
+}
+.modern-horizon-select:focus {
+  border-color: #10b981;
+}
+/* Harita üst sağ köşe için şeffaf kontrol paneli */
+/* Harita üst kısmında ortalanmış bar için */
+/* Sol üstte mod paneli */
+/* Sol üst panel */
+.floating-mode-panel.left-panel {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: rgba(112, 113, 113, 0.7);
+  border-radius: 6px;
+}
+/* Sağ üst panel */
+.floating-opacity-panel.right-panel {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  background: rgba(112, 113, 113, 0.7);
+  border-radius: 6px;
+}
+
+.green-panel {
+  border: none;
+  box-shadow: none;
+  padding: 8px 12px;
+}
+
+
+.green-label{
+  color: #1d2121 !important;
+  font-weight: 700;
+}
+.mode-btn {
+  color: #10b981 !important;
+  background: transparent !important;
+  border: none !important;
+  font-weight: 700;
+}
+
+.mode-btn.active {
+  border-bottom: 2px solid #10b981 !important;
+  background: transparent !important;
+  color: #10b981 !important;
+}
+@media (max-width: 900px) {
+  .floating-mode-panel.left-panel {
+    top: 8px;
+    left: 8px;
+  }
+  .green-panel {
+    min-width: 120px;
+    padding: 8px 6px;
+    font-size: 13px;
+  }
+  .floating-opacity-panel.right-panel {
+    top: 8px;
+    right: 8px;
+  }
+}
+@media (max-width: 900px) {
+  .floating-mode-panel {
+    top: 8px;
+    left: 8px;
+  }
+  .mode-panel-content {
+    min-width: 140px;
+    padding: 8px 6px;
+    font-size: 13px;
+  }
+  .floating-opacity-panel {
+    top: 80px;
+    left: 8px;
+  }
+  .opacity-panel-content {
+    min-width: 100px;
+    padding: 8px 6px;
+    font-size: 13px;
+  }
+}
+/* Dashboard-style Header for Trend Prediction */
+.dashboard-header {
+  margin-bottom: 18px;
+  padding: 18px 0 0 0;
+}
+.dashboard-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #222;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.dashboard-icon {
+  font-size: 2.3rem;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.dashboard-title span:last-child {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #222;
+}
+.dashboard-desc {
+  font-size: 1.13rem;
+  color: #374151;
+  font-weight: 500;
+  margin-top: 2px;
+  max-width: 600px;
+}
+/* Minimal Header Styles */
+.header .highlight-green {
+  color: #10b981;
+  font-weight: 700;
+}
+.header .highlight-grey {
+  color: #6b7280;
+  font-weight: 700;
+}
+.header .highlight-water {
+  color: #3b82f6;
+  font-weight: 700;
+}
+.header p {
+  font-size: 20px;
+  color: rgba(0, 0, 0, 0.7);
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+/* Inline ve internal CSS trend-prediction.html'den taşındı */
+.map-outer {
+  position: relative;
+  width: 100%;
+  height: 60vh;
+  min-height: 400px;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+#map {
+  min-height: 400px;
+  height: 100%;
+  width: 100%;
+  background: #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  margin-bottom: 0;
+  flex: 1 1 0;
+}
+.loading-overlay {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255,255,255,0.85);
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.loading-spinner {
+  font-size: 48px;
+  animation: spin 1s linear infinite;
+  color: #10b981;
+  margin-bottom: 12px;
+}
+.loading-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: #059669;
+  letter-spacing: 0.5px;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.mask-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 500;
+  pointer-events: none;
+  display: none;
+}
+.folium-map-section {
+  margin: 32px 0 56px 0;
+  padding-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+}
+.folium-map-container {
+  width: 100%;
+  height: 40vh;
+  min-height: 500px;
+  border-radius: 12px;
+  box-shadow: none;
+  background: transparent;
+  display: block;
+}
+.folium-placeholder {
+  color: #6b7280;
+}
+.horizon-select-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 0 0;
+  padding: 8px 16px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  width: fit-content;
+}
 /* ============================================================================
-   TREND PREDICTION SAYFASI - ÖZEL STİLLER
-   ============================================================================
-   
-   Bu dosya sadece trend-prediction.html için özel stilleri içerir.
-   
-   Özellikler:
-   - Harita konteyneri (tek ve split-screen modu)
-   - Timeline slider ve kontroller
-   - İstatistik kartları
-   - Kontrol paneli
-   
-   ============================================================================
-*/
+
+/* Modern panel kutusu */
+.modern-panel {
+  background: rgba(255,255,255,0.96);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(16,185,129,0.10);
+  border: 1.5px solid #e5e7eb;
+  padding: 18px 24px;
+  min-width: 220px;
+  font-size: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.modern-panel-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #059669;
+  margin-bottom: 4px;
+  letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.modern-mode-buttons {
+  display: flex;
+  gap: 10px;
+}
+.modern-mode-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  background: #f8fafc;
+  color: #059669;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.04);
+}
+.modern-mode-btn.active {
+  background: linear-gradient(90deg,#10b981 0%,#3b82f6 100%);
+  color: #fff;
+  border-color: #10b981;
+  box-shadow: 0 4px 16px rgba(16,185,129,0.12);
+}
+.modern-slider-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #059669;
+  margin-bottom: 2px;
+}
+.modern-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.modern-slider {
+  width: 120px;
+  accent-color: #10b981;
+  height: 6px;
+  border-radius: 4px;
+  background: linear-gradient(90deg,#10b981 0%,#3b82f6 100%);
+}
+.modern-slider-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #10b981;
+  min-width: 32px;
+  text-align: right;
+}
+@media (max-width: 900px) {
+  .modern-panel {
+    min-width: 120px;
+    padding: 8px 6px;
+    font-size: 13px;
+  }
+}
 
 /* ============================================================================
    KONTROL PANELİ
@@ -86,6 +421,15 @@
 /* Opacity Slider */
 #opacity-slider {
   width: 100%;
+  height: 60vh;
+/* Folium haritası iframe boyutunu ana harita ile eşitle */
+.folium-map-container iframe {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  border: none;
+  display: block;
+}
   height: 8px;
   border-radius: 4px;
   background: linear-gradient(90deg, 
@@ -160,29 +504,34 @@
   background: rgba(255, 255, 255, 0.98);
   border-radius: 18px;
   padding: 0;
-  margin-bottom: 28px;
+  margin-bottom: 0;
   box-shadow: 0 6px 28px rgba(0, 0, 0, 0.1);
   border: 2px solid rgba(16, 185, 129, 0.2);
   overflow: hidden;
-  height: 520px;
+  height: 40vh;
+  min-height: 500px;
   display: flex;
-  min-height: 320px;
 }
 
-.map {
-  flex: 1;
-  height: 100%;
-  z-index: 1;
-  transition: all 0.3s ease;
+.map-outer {
+  display: flex;
+  align-items: stretch;
+  height: 60vh;
+  min-height: 400px;
 }
-
+.map-split {
+  flex: 0 0 50%;
+  max-width: 50%;
+  width: 50%;
+  display: block !important;
+  border-right: 3px solid rgba(16, 185, 129, 0.4);
+}
 .map-hidden {
-  display: none;
+  display: none !important;
 }
 
 .map-split {
-  flex: 0 0 50%;
-  border-right: 3px solid rgba(16, 185, 129, 0.4);
+  /* duplicate removed */
 }
 
 /* Legend */
@@ -234,12 +583,10 @@
    ============================================================================ */
 
 .timeline-container {
-  background: rgba(255, 255, 255, 0.98);
+  background: transparent;
   border-radius: 18px;
   padding: 24px;
   margin-bottom: 28px;
-  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.08);
-  border: 2px solid rgba(16, 185, 129, 0.2);
 }
 
 .timeline-header {
@@ -569,32 +916,4 @@
   }
 }
 
-/* Loading Overlay & Spinner */
-#loading-overlay {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  background: rgba(255,255,255,0.85);
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 999;
-}
-.loading-spinner {
-  font-size: 48px;
-  animation: spin 1s linear infinite;
-  color: #10b981;
-  margin-bottom: 12px;
-}
-.loading-text {
-  font-size: 18px;
-  font-weight: 700;
-  color: #059669;
-  letter-spacing: 0.5px;
-}
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+/* ...existing code... */
