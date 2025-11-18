@@ -428,45 +428,62 @@ function createTrendChart() {
   });
 }
 
-// Timeline ve slider kodları kaldırıldı
+
 function updateUI() {
   if (!predictionData) return;
+
   // Horizon dropdown ile seçilen tahmini bul
   const horizonValue = document.getElementById('horizon-select').value;
+
   // Uygun tahmini bul
   let pred = null;
   if (predictionData.predictions && Array.isArray(predictionData.predictions)) {
-    pred = predictionData.predictions.find(p => String(p.horizon) === String(horizonValue));
+    pred = predictionData.predictions.find(
+      p => String(p.horizon) === String(horizonValue)
+    );
     // Eğer horizon yoksa ilk tahmini göster
     if (!pred) pred = predictionData.predictions[0];
   }
   if (!pred) return;
+
   // İstatistik kartlarını güncelle
   updateStatCard('green', pred.current.green, pred.prediction.green, pred.changes.green);
-  updateStatCard('gray', pred.current.grey, pred.prediction.grey, pred.changes.grey);
+  updateStatCard('gray',  pred.current.grey,  pred.prediction.grey,  pred.changes.grey);
   updateStatCard('water', pred.current.water, pred.prediction.water, pred.changes.water);
-  // Haritaya overlay ekle (isteğe bağlı, sadece mask varsa)
+
+  // Haritaya mask overlay'i ekle (varsa)
   addPredictionOverlay(pred);
 
   // --- TREND TILE LAYER ENTEGRASYONU ---
-  // Yıl ve çeyrek predictionData'dan alınır
-  const year = pred.prediction.year || pred.current.year;
+  const year    = pred.prediction.year    || pred.current.year;
   const quarter = pred.prediction.quarter || pred.current.quarter;
+  const horizon = pred.horizon || parseInt(horizonValue, 10) || 1;
+
+  // Global değerleri güncelle ki zoom handler vs. aynı bilgiyi kullansın
+  window.currentTrendYear = year;
+  window.currentTrendQuarter = quarter;
+  window.currentTrendHorizon = horizon;
 
   // Eski trend tile layer'ı kaldır
   if (window.trendTileLayer) {
-    map.removeLayer(window.trendTileLayer);
+    window.map.removeLayer(window.trendTileLayer);
     window.trendTileLayer = null;
   }
 
+  // Yeni trend tile URL (horizon dahil!)
+  const tileUrl =
+    `/api/trend/tiles/${year}/${quarter}/${horizon}/{z}/{x}/{y}.png`;
+
   // Yeni trend tile layer'ı ekle
-  window.trendTileLayer = L.tileLayer(`/api/trend/tiles/${year}/${quarter}/{z}/{x}/{y}.png`, {
+  window.trendTileLayer = L.tileLayer(tileUrl, {
     attribution: 'Trend Prediction',
-    opacity: parseFloat(opacitySlider.value) / 100,
+    opacity: window.trendOpacity,  // slider’dan gelen global değer
     maxZoom: 18,
     tileSize: 256
   });
-  window.trendTileLayer.addTo(map);
+  window.trendTileLayer.addTo(window.map);
+
+  console.log(`🟢 updateUI → trend tiles: ${year} Q${quarter} t+${horizon}`);
 }
 
 function updateStatCard(type, current, predicted, change) {
@@ -567,85 +584,89 @@ function showErrorMessage(message) {
 
 // --- HARİTA BAŞLATMA VE TREND TILE LAYER ---
 window.addEventListener('DOMContentLoaded', () => {
-  // Backend AOI ile birebir bounds
-  const istanbulBounds = [[40.75, 28.62], [41.18, 29.56]];
+  // Veri setinin gerçekten olduğu çekirdek alan (overlay’in kendisi)
+  const dataBounds = [[40.75, 28.62], [41.18, 29.56]];
+
+  // Kullanıcıya göstereceğin daha geniş İstanbul alanı
+  const viewBounds = [[40.60, 28.30], [41.40, 29.90]];
+
   window.map = L.map('map', {
-    center: [40.965, 29.09],
-    zoom: 13, // Başlangıçta tile'ların görüneceği bir zoom
-    minZoom: 12,
-    maxZoom: 15,
+    center: [41.0, 29.0],
+    zoom: 11,          // Biraz daha dışarıdan başlasın
+    minZoom: 10,        // Daha çok küçülmeye izin ver
+    maxZoom: 14,
     zoomControl: true,
     scrollWheelZoom: true,
     doubleClickZoom: false,
     dragging: true,
-    zoomSnap: 0.10,
-    zoomDelta: 0.5,
+    zoomSnap: 0.15,
+    zoomDelta: 0.25,
     wheelPxPerZoomLevel: 120,
-    maxBounds: istanbulBounds,
-    maxBoundsViscosity: 1.0
+    maxBounds: dataBounds  // Harita sınırlarını veri alanıyla kısıtla
   });
-  window.map.fitBounds(istanbulBounds);
 
-  // Tile layer'ı her zaman ekle
-  window.currentTrendYear = 2026;
-  window.currentTrendQuarter = 1;
-  window.trendOpacity = 0.7;
-  const tileUrl = `/api/trend/tiles/${window.currentTrendYear}/${window.currentTrendQuarter}/{z}/{x}/{y}.png`;
-  window.trendTileLayer = L.tileLayer(tileUrl, {
-    attribution: 'Trend Prediction',
-    minZoom: 12,
-    maxZoom: 15,
-    opacity: window.trendOpacity,
-    tileSize: 256
-  });
-  window.trendTileLayer.addTo(window.map);
+  // Ekranı İstanbul çevresine yay
+  window.map.fitBounds(viewBounds);
 
+  // Base layer
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap',
     maxZoom: 18
   }).addTo(window.map);
 
-  window.trendTileLayer = null;
+  // Trend tile başlangıç değerleri
   window.currentTrendYear = 2026;
   window.currentTrendQuarter = 1;
+  window.currentTrendHorizon = 1;   // t+1
   window.trendOpacity = 0.7;
+  window.trendTileLayer = null;
 
+  // Trend tile layer'ı backend endpoint'ine göre güncelle
   window.updateTrendTileLayer = function() {
     if (window.trendTileLayer) {
       window.map.removeLayer(window.trendTileLayer);
     }
-    const tileUrl = `/api/trend/tiles/${window.currentTrendYear}/${window.currentTrendQuarter}/{z}/{x}/{y}.png`;
+
+    const tileUrl =
+      `/api/trend/tiles/${window.currentTrendYear}/${window.currentTrendQuarter}/${window.currentTrendHorizon}/{z}/{x}/{y}.png`;
+
     window.trendTileLayer = L.tileLayer(tileUrl, {
       attribution: 'Trend Prediction',
-      minZoom: 12,
-      maxZoom: 15,
+      minZoom: 9,
+      maxZoom: 18,
       opacity: window.trendOpacity,
       tileSize: 256
     });
+
     window.trendTileLayer.addTo(window.map);
-    console.log(`🟢 Trend tile layer updated: ${window.currentTrendYear} Q${window.currentTrendQuarter}`);
+    console.log(`🟢 Trend tile layer updated: ${window.currentTrendYear} Q${window.currentTrendQuarter} t+${window.currentTrendHorizon}`);
   };
 
-  // Opacity slider event
+  // Opaklık slider’ı
   const opacitySlider = document.getElementById('opacity-slider');
   if (opacitySlider) {
+    // Başlangıç değeri UI'a yansıt
+    opacitySlider.value = window.trendOpacity * 100;
+    const valueLabel = document.getElementById('opacity-value');
+    if (valueLabel) valueLabel.textContent = `${opacitySlider.value}%`;
+
     opacitySlider.addEventListener('input', (e) => {
       window.trendOpacity = e.target.value / 100;
-      document.getElementById('opacity-value').textContent = e.target.value + '%';
+      if (valueLabel) valueLabel.textContent = e.target.value + '%';
       if (window.trendTileLayer) {
         window.trendTileLayer.setOpacity(window.trendOpacity);
       }
     });
   }
 
-  // Zoom kontrolü - Düşük zoom'da tile layer'ı gizle
+  // Zoom kontrolü: çok çok dışarı çıkınca kapatmak istersen threshold’u düşür
   window.map.on('zoomend', () => {
     const currentZoom = window.map.getZoom();
-    if (currentZoom < 12 && window.trendTileLayer) {
+    if (currentZoom < 9 && window.trendTileLayer) {
       window.map.removeLayer(window.trendTileLayer);
       window.trendTileLayer = null;
       console.log('ℹ️ Zoom seviyesi düşük - trend tile layer gizlendi');
-    } else if (currentZoom >= 12 && !window.trendTileLayer) {
+    } else if (currentZoom >= 9 && !window.trendTileLayer) {
       window.updateTrendTileLayer();
       console.log('✅ Zoom seviyesi yeterli - trend tile layer gösteriliyor');
     }
@@ -654,6 +675,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Başlangıçta trend tile layer'ı ekle
   window.updateTrendTileLayer();
 });
+
 
 // Karşılaştırma haritası (başlangıçta gizli)
 let mapCompare = null;
@@ -806,12 +828,19 @@ document.addEventListener('mouseup', () => {
   }, 100);
 });
 
-// Horizon dropdown değişince UI güncellensin
+// Horizon dropdown değişince trend tile'ları güncelle
 const horizonSelect = document.getElementById('horizon-select');
 if (horizonSelect) {
+  // Sayfa açılır açılmaz seçili değere göre horizon set et
+  window.currentTrendHorizon = parseInt(horizonSelect.value, 10) || 1;
+
   horizonSelect.addEventListener('change', () => {
-    updateUI();
-    showFoliumMapIframe();
+    window.currentTrendHorizon = parseInt(horizonSelect.value, 10) || 1;
+
+    console.log('🔄 Horizon değişti → t+', window.currentTrendHorizon);
+    if (window.updateTrendTileLayer) {
+      window.updateTrendTileLayer();
+    }
   });
 }
 

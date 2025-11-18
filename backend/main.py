@@ -845,70 +845,130 @@ def get_available_tiles():
 # TREND TILE OVERLAY ENDPOINT (prediction_outputs_trend_tiles)
 # =========================================================================
 
+from pathlib import Path
+import math
+import io
+import numpy as np
+from PIL import Image
+from fastapi import HTTPException
+from fastapi.responses import StreamingResponse
+
+# ...
+
 @app.get("/api/trend/tiles/{year}/{quarter}/{horizon}/{z}/{x}/{y}.png")
 def get_trend_tile(year: int, quarter: int, horizon: int, z: int, x: int, y: int):
     """
-    Returns trend prediction mask tile.
-    Colors .npy files in prediction_outputs_trend_tiles folder and serves as PNG.
-    Used only for trend tile overlay.
+    Trend tahmin tile'ı döner (t+1, t+4, t+8).
+
+    - data/prediction_outputs_trend_tiles içindeki
+      2026_Q1_row_col_trend_tplusX.npy / .png dosyalarını kullanır.
+    - .png varsa direkt onu döner, yoksa .npy maskesinden RGBA üretir.
     """
-    # AOI
+
+    # Sadece 1,4,8 destekli
+    horizon_suffix = {1: "tplus1", 4: "tplus4", 8: "tplus8"}
+    if horizon not in horizon_suffix:
+        raise HTTPException(status_code=404, detail="Unsupported horizon")
+
+    suffix = horizon_suffix[horizon]
+
+    # -------- 1) Tile -> Lat/Lon, AOI kontrolü --------
+    # İstanbul AOI (senin kullandığın bbox)
     LON_MIN, LAT_MIN = 28.62, 40.75
     LON_MAX, LAT_MAX = 29.56, 41.18
+
     n = 2 ** z
     lon_deg = (x + 0.5) / n * 360.0 - 180.0
     lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * (y + 0.5) / n)))
     lat_deg = math.degrees(lat_rad)
+
+    # AOI dışındaysa tamamen şeffaf PNG
     if not (LON_MIN <= lon_deg <= LON_MAX and LAT_MIN <= lat_deg <= LAT_MAX):
-        empty_img = Image.new('RGBA', (256, 256), (0, 0, 0, 0))
+        empty = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
         buf = io.BytesIO()
-        empty_img.save(buf, format='PNG')
+        empty.save(buf, format="PNG")
         buf.seek(0)
-        return StreamingResponse(buf, media_type='image/png')
+        return StreamingResponse(buf, media_type="image/png")
+
+    # -------- 2) Lat/Lon -> patch row/col (tile index) --------
+    # Buradaki grid yapısı senin softmax/tile üretim koduna göre
+    # (örnek: 18x40 patch, her patch 256x256)
     lon_norm = (lon_deg - LON_MIN) / (LON_MAX - LON_MIN)
     lat_norm = (lat_deg - LAT_MIN) / (LAT_MAX - LAT_MIN)
+
     row_index = int((1.0 - lat_norm) * 18)
     col_index = int(lon_norm * 40)
     row_index = max(0, min(17, row_index))
     col_index = max(0, min(39, col_index))
+
     patch_row = row_index * 256
     patch_col = col_index * 256
-    filename = f"{year}_Q{quarter}_{patch_row:05d}_{patch_col:05d}_trend_tplus{horizon}.npy"
-    patch_path = Path(__file__).parent / "data" / "prediction_outputs_trend_tiles" / filename
-    if not patch_path.exists():
-        empty_img = Image.new('RGBA', (256, 256), (0, 0, 0, 0))
-        buf = io.BytesIO()
-        empty_img.save(buf, format='PNG')
+
+    # -------- 3) Dosya yolları --------
+    out_dir = Path(__file__).parent / "data" / "prediction_outputs_trend_tiles"
+    png_path = out_dir / f"{year}_Q{quarter}_{patch_row:05d}_{patch_col:05d}_trend_{suffix}.png"
+    npy_path = out_dir / f"{year}_Q{quarter}_{patch_row:05d}_{patch_col:05d}_trend_{suffix}.npy"
+
+    # Önce hazır PNG varsa onu döneriz (trend_prediction_generate.py’nin ürettiği)
+    if png_path.exists():
+        buf = io.BytesIO(png_path.read_bytes())
         buf.seek(0)
-        return StreamingResponse(buf, media_type='image/png')
+        return StreamingResponse(
+            buf,
+            media_type="image/png",
+            headers={
+                "Cache-Control": "public, max-age=86400",
+                "Access-Control-Allow-Origin": "*",
+            },
+        )
+
+    # PNG yoksa NPY'den üret
+    if not npy_path.exists():
+        # Hiç veri yoksa şeffaf
+        empty = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+        buf = io.BytesIO()
+        empty.save(buf, format="PNG")
+        buf.seek(0)
+        return StreamingResponse(buf, media_type="image/png")
+
     try:
-        arr = np.load(patch_path)
-        mask = np.argmax(arr, axis=0).astype(np.uint8)
-        palette = np.array([
-            [180, 180, 180],  # gri
-            [34, 139, 34],    # yeşil
-            [30, 144, 255]    # su
-        ], dtype=np.uint8)
-        rgb = palette[mask]
-        img = Image.fromarray(rgb, mode='RGB')
+        pred_mask = np.load(npy_path).astype(np.uint8)  # (H, W), 0..3
+
+        if pred_mask.ndim != 2:
+            raise ValueError(f"Beklenmeyen mask shape: {pred_mask.shape}")
+
+        h, w = pred_mask.shape
+        rgba = np.zeros((h, w, 4), dtype=np.uint8)
+
+        # trend_prediction_generate.py ile aynı palette
+        palette = {
+            0: (0, 0, 0, 0),        # background -> tam şeffaf
+            1: (0, 200, 0, 160),    # yeşil
+            2: (130, 130, 130, 160),# beton/gri
+            3: (0, 180, 255, 160),  # su
+        }
+
+        for k, col in palette.items():
+            rgba[pred_mask == k] = col
+
+        img = Image.fromarray(rgba, mode="RGBA")
+
     except Exception as e:
         print(f"Trend tile görselleştirme hatası: {e}")
-        empty_img = Image.new('RGBA', (256, 256), (0, 0, 0, 0))
-        buf = io.BytesIO()
-        empty_img.save(buf, format='PNG')
-        buf.seek(0)
-        return StreamingResponse(buf, media_type='image/png')
+        img = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+
     buf = io.BytesIO()
-    img.save(buf, format='PNG', optimize=True)
+    img.save(buf, format="PNG", optimize=True)
     buf.seek(0)
     return StreamingResponse(
         buf,
-        media_type='image/png',
+        media_type="image/png",
         headers={
-            'Cache-Control': 'public, max-age=86400',
-            'Access-Control-Allow-Origin': '*',
-        }
+            "Cache-Control": "public, max-age=86400",
+            "Access-Control-Allow-Origin": "*",
+        },
     )
+
 
 # =========================================================================
 # Folium Map Endpoint for Trend Tiles (This is used for quick preview)
