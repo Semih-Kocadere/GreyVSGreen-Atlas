@@ -1019,14 +1019,36 @@ def get_trend_folium_map(year: int, quarter: int, horizon: int):
 
 # Serve frontend files statically
 # NOTE: This mount should be last, otherwise API routes won't work!
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+
+# ============================================================
+# FRONTEND SERVER (Static Files Server)
+# ============================================================
 try:
+    # Önce spesifik path'ler
+    app.mount(
+        "/css",
+        StaticFiles(directory=FRONTEND_DIR / "css"),
+        name="css",
+    )
+    app.mount(
+        "/js",
+        StaticFiles(directory=FRONTEND_DIR / "js"),
+        name="js",
+    )
+    
+    app.mount(
+        "/images",
+        StaticFiles(directory=FRONTEND_DIR / "images"),
+        name="images",
+    )
+    # EN SON root (/)
     app.mount(
         "/",
-        StaticFiles(directory="../frontend", html=True),
-        name="frontend"
+        StaticFiles(directory=FRONTEND_DIR / "pages", html=True),
+        name="frontend",
     )
     print("Frontend files ready (../frontend)")
 except RuntimeError:
-    # Don't raise error if frontend folder is missing (might be during development)
     print("⚠️  Frontend folder not found")
     pass

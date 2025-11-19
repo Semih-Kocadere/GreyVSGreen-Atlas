@@ -381,7 +381,7 @@ form.addEventListener('submit', async (e) => {
     if (!res.ok) throw new Error(translations[currentLang].error);
     const data = await res.json();
     localStorage.setItem('token', data.access_token);
-    location.href = '/dashboard.html';
+    location.href = './dashboard.html';
   } catch(err) {
     const el = document.getElementById('err');
     el.style.display = 'block';
