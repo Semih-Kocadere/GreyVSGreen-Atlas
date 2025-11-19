@@ -1,4 +1,4 @@
-/* Üst orta horizon paneli */
+/* Top center horizon panel */
 .floating-horizon-panel.top-center-panel {
   position: absolute;
   top: 18px;
@@ -43,10 +43,7 @@
 .modern-horizon-select:focus {
   border-color: #10b981;
 }
-/* Harita üst sağ köşe için şeffaf kontrol paneli */
-/* Harita üst kısmında ortalanmış bar için */
-/* Sol üstte mod paneli */
-/* Sol üst panel */
+/* Map top all panels */
 .floating-mode-panel.left-panel {
   position: absolute;
   top: 18px;
@@ -58,7 +55,7 @@
   background: rgba(112, 113, 113, 0.7);
   border-radius: 6px;
 }
-/* Sağ üst panel */
+
 .floating-opacity-panel.right-panel {
   position: absolute;
   top: 18px;
@@ -180,8 +177,9 @@
   margin-top: 8px;
   margin-bottom: 16px;
 }
-
-/* Inline ve internal CSS trend-prediction.html'den taşındı */
+/* ============================================================================
+   MAP FOLIUM CONTAINER
+   ============================================================================ */
 .map-outer {
   position: relative;
   width: 100%;
@@ -269,8 +267,8 @@
   width: fit-content;
 }
 /* ============================================================================
-
-/* Modern panel kutusu */
+   MODERN PANEL
+   ============================================================================ */
 .modern-panel {
   background: rgba(255,255,255,0.96);
   border-radius: 16px;
@@ -349,7 +347,7 @@
 }
 
 /* ============================================================================
-   KONTROL PANELİ
+   CONTROL PANEL
    ============================================================================ */
 
 .control-panel {
@@ -422,7 +420,7 @@
 #opacity-slider {
   width: 100%;
   height: 60vh;
-/* Folium haritası iframe boyutunu ana harita ile eşitle */
+/* Folium Map iframe size matched with main map */
 .folium-map-container iframe {
   width: 100%;
   height: 100%;
@@ -496,7 +494,7 @@
 }
 
 /* ============================================================================
-   HARİTA KONTEYNERİ
+   MAP CONTAINER
    ============================================================================ */
 
 .map-container {
@@ -530,9 +528,6 @@
   display: none !important;
 }
 
-.map-split {
-  /* duplicate removed */
-}
 
 /* Legend */
 .map-legend {
@@ -758,7 +753,7 @@
 }
 
 /* ============================================================================
-   İSTATİSTİK KARTLARI
+   STATS CARDS
    ============================================================================ */
 
 .stats-container {
@@ -853,7 +848,7 @@
 }
 
 /* ============================================================================
-   BİLGİ KUTUSU
+   INFO BOX
    ============================================================================ */
 
 .info-box {
@@ -884,7 +879,7 @@
 }
 
 /* ============================================================================
-   RESPONSİVE
+   RESPONSIVE
    ============================================================================ */
 
 @media (max-width: 1400px) {
@@ -916,4 +911,4 @@
   }
 }
 
-/* ...existing code... */
+/*
