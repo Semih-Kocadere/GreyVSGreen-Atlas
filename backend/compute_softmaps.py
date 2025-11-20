@@ -1,14 +1,14 @@
 """
 Batch Softmax Computation Script
 =================================
-Tüm tile'lar için önceden softmax hesaplaması yapar ve kaydeder.
+Precomputes and saves softmax maps for all tiles.
 
-Kullanım:
+Usage:
     python compute_softmaps.py --start-year 2018 --end-year 2025
     python compute_softmaps.py --year 2024 --quarter 3
     python compute_softmaps.py --workers 4 --device cuda
 
-Çıktı Yapısı:
+Output:
     backend/softmaps/
         2018_Q1_00000_00000.npy  → [4, H, W] float32 softmax
         2018_Q1_00000_00256.npy
@@ -25,7 +25,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-# Model servisi modüllerini import et
+# Import model service modules
 from model_service import (
     ModelService,
     TILES_DIR,
@@ -38,28 +38,26 @@ from model_service import (
 
 
 # ============================================================================
-# YAPILANDIRMA
+# CONFIGURATION
 # ============================================================================
 
 SOFTMAPS_DIR = Path(__file__).parent / "softmaps"
 SOFTMAPS_DIR.mkdir(exist_ok=True)
 
-# İşlem ayarları
+# Processing settings
 DEFAULT_BATCH_SIZE = 16
 DEFAULT_WORKERS = 4
 
 
 # ============================================================================
-# BATCH PROCESSING FONKSIYONLARI
+# BATCH PROCESSING FUNCTIONS
 # ============================================================================
 
 def softmap_path_from_tile(tile_path: Path) -> Path:
     """
-    Tile dosyasından softmap çıktı yolunu oluştur.
-    
+    Get output path for softmap from tile filename.
     Args:
         tile_path: 2025_Q1_00000_00256.npy (tiles/images/)
-    
     Returns:
         softmaps/2025_Q1_00000_00256.npy
     """
@@ -67,7 +65,7 @@ def softmap_path_from_tile(tile_path: Path) -> Path:
 
 
 def is_softmap_computed(tile_path: Path) -> bool:
-    """Softmap daha önce hesaplanmış mı kontrol et."""
+    """Check if softmap is already computed."""
     return softmap_path_from_tile(tile_path).exists()
 
 
@@ -77,15 +75,13 @@ def compute_single_softmap(
     force: bool = False
 ) -> Optional[Path]:
     """
-    Tek bir tile için softmap hesapla ve kaydet.
-    
+    Compute and save softmap for a single tile.
     Args:
         tile_path: Input tile path
-        model_service: Yüklenmiş model servisi
-        force: Var olan dosyaları da yeniden hesapla
-    
+        model_service: Loaded model service
+        force: Recompute even if file exists
     Returns:
-        Çıktı dosya yolu veya None (skip edilirse)
+        Output file path or None if skipped
     """
     output_path = softmap_path_from_tile(tile_path)
     
@@ -114,14 +110,12 @@ def compute_batch_softmaps(
     show_progress: bool = True
 ) -> Tuple[int, int]:
     """
-    Bir tile listesi için softmap'leri toplu hesapla.
-    
+    Compute softmaps for a list of tiles in batch.
     Args:
-        tile_paths: Tile dosya yolları
-        model_service: Model servisi
-        force: Yeniden hesaplama
-        show_progress: Progress bar göster
-    
+        tile_paths: List of tile paths
+        model_service: Model service
+        force: Recompute
+        show_progress: Show progress bar
     Returns:
         (computed_count, skipped_count)
     """
@@ -148,14 +142,12 @@ def compute_period_softmaps(
     force: bool = False
 ) -> Tuple[int, int]:
     """
-    Belirli bir dönem için tüm tile'ların softmap'lerini hesapla.
-    
+    Compute softmaps for all tiles in a specific period.
     Args:
-        year: Yıl
-        quarter: Çeyrek
-        model_service: Model servisi
-        force: Yeniden hesaplama
-    
+        year: Year
+        quarter: Quarter
+        model_service: Model service
+        force: Recompute
     Returns:
         (computed, skipped)
     """
@@ -165,16 +157,16 @@ def compute_period_softmaps(
     tiles = get_tiles_for_period(year, quarter, TILES_DIR)
     
     if not tiles:
-        print(f"  ⚠️  Tile bulunamadı")
+        print(f"Tile bulunamadı")
         return 0, 0
     
-    print(f"  📦 Toplam tile: {len(tiles)}")
+    print(f"Toplam tile: {len(tiles)}")
     
     # Softmap'leri hesapla
     computed, skipped = compute_batch_softmaps(tiles, model_service, force)
     
-    print(f"  ✅ Hesaplanan: {computed}")
-    print(f"  ⏭️  Atlanan: {skipped}")
+    print(f"Hesaplanan: {computed}")
+    print(f"Atlanan: {skipped}")
     
     return computed, skipped
 
@@ -189,9 +181,8 @@ def worker_process(
     force: bool
 ):
     """
-    Paralel işleme için worker fonksiyonu.
-    
-    NOT: Her worker kendi ModelService instance'ını oluşturur.
+    Worker function for parallel processing.
+    NOTE: Each worker creates its own ModelService instance.
     """
     # Worker için ayrı model servisi
     model_service = ModelService()
@@ -215,13 +206,11 @@ def compute_parallel(
     force: bool = False
 ) -> Tuple[int, int]:
     """
-    Çoklu işlemci kullanarak paralel softmap hesaplama.
-    
+    Compute softmaps in parallel using multiple processes.
     Args:
-        tile_paths: Tüm tile yolları
-        num_workers: Paralel worker sayısı
-        force: Yeniden hesaplama
-    
+        tile_paths: All tile paths
+        num_workers: Number of parallel workers
+        force: Recompute
     Returns:
         (total_computed, total_skipped)
     """
@@ -255,7 +244,7 @@ def main():
         description="Tüm tile'lar için softmax haritalarını önceden hesapla"
     )
     
-    # Dönem seçimi
+    # Period selection
     parser.add_argument(
         "--start-year",
         type=int,
@@ -280,7 +269,7 @@ def main():
         help="Sadece belirli bir çeyrek (opsiyonel)"
     )
     
-    # İşlem ayarları
+    # Processing options
     parser.add_argument(
         "--force",
         action="store_true",
@@ -307,7 +296,7 @@ def main():
     print("🧠 BATCH SOFTMAX COMPUTATION")
     print("=" * 70)
     
-    # Device ayarla
+    # Set device
     if args.device == "auto":
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     else:
@@ -319,7 +308,7 @@ def main():
     print(f"👷 Workers: {args.workers}")
     print()
     
-    # Model servisini yükle
+    # Load model service
     print("📦 Modeller yükleniyor...")
     model_service = ModelService()
     
@@ -333,7 +322,7 @@ def main():
         print(f"   - band_std.npy")
         return 1
     
-    # Dönemleri belirle
+    # Determine periods
     if args.year and args.quarter:
         # Tek dönem
         periods = [(args.year, args.quarter)]
@@ -351,7 +340,7 @@ def main():
     print(f"📅 Toplam dönem: {len(periods)}")
     print()
     
-    # İşleme başla
+    # Start processing
     start_time = time.time()
     total_computed = 0
     total_skipped = 0
@@ -363,7 +352,7 @@ def main():
         total_computed += computed
         total_skipped += skipped
     
-    # Özet
+    # Summary
     elapsed = time.time() - start_time
     print("\n" + "=" * 70)
     print("✅ TAMAMLANDI")
@@ -374,7 +363,7 @@ def main():
     print(f"📊 Toplam: {total_computed + total_skipped}")
     
     if total_computed > 0:
-        print(f"⚡ Ortalama: {elapsed / total_computed:.2f} sn/tile")
+        print(f"⚡ Average: {elapsed / total_computed:.2f} sec/tile")
     
     print()
     print(f"💾 Softmap'ler: {SOFTMAPS_DIR}")

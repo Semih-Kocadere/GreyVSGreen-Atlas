@@ -1,25 +1,25 @@
 """
-Tile Service - Local tile'ları servise et
+Tile Service - Serve local tiles
 ==========================================
-Backend'deki tiles/images/ klasöründen .npy patch dosyalarını okur,
-renklendirir ve Leaflet'e PNG olarak serve eder.
+Reads .npy patch files from backend tiles/images/ folder,
+colors them and serves as PNG for Leaflet.
 
-Dosya yapısı:
+File structure:
 backend/tiles/
-  images/
-    2018_Q1_00000_00000.npy  → row=0, col=0
-    2018_Q1_00000_00256.npy  → row=0, col=256
-    ...
+    images/
+        2018_Q1_00000_00000.npy  → row=0, col=0
+        2018_Q1_00000_00256.npy  → row=0, col=256
+        ...
 
 Naming convention:
 {year}_Q{quarter}_{row:05d}_{col:05d}.npy
-Örnek: 2018_Q1_00000_00256.npy
+Example: 2018_Q1_00000_00256.npy
 
-Görselleştirmeler:
-- NDVI: Yeşil alan (vegetation)
-- NDWI: Su alanı (water)
-- NDBI: Beton/yapı (built-up)
-- RGB: Doğal görünüm
+Visualizations:
+- NDVI: Green area (vegetation)
+- NDWI: Water area
+- NDBI: Built-up area
+- RGB: Natural view
 """
 
 import io
@@ -35,7 +35,7 @@ from fastapi.responses import StreamingResponse
 
 
 # ============================================================================
-# YAPILANDIRMA
+# CONFIGURATION
 # ============================================================================
 
 TILES_DIR = Path(__file__).parent / "tiles"
@@ -43,12 +43,12 @@ IMAGES_DIR = TILES_DIR / "images"
 
 
 # ============================================================================
-# TILE <-> PATCH DÖNÜŞÜM
+# TILE <-> PATCH CONVERSION
 # ============================================================================
 
 def tile_to_patch_coords(z, x, y):
     """
-    Leaflet tile koordinatlarını patch row/col'a çevir.
+    Convert Leaflet tile coordinates to patch row/col.
     
     Patch grid: 18 rows × 40 cols (0-4352, 0-9984, stride 256)
     GEE AOI: [28.62, 40.75, 29.56, 41.18] (lon_min, lat_min, lon_max, lat_max)
@@ -58,37 +58,37 @@ def tile_to_patch_coords(z, x, y):
         x, y: Leaflet tile coordinates
     
     Returns:
-        (row, col): Patch koordinatları veya (None, None)
+        (row, col): Patch coordinates or (None, None)
     """
     # GEE AOI boundaries
     LON_MIN, LAT_MIN = 28.62, 40.75
     LON_MAX, LAT_MAX = 29.56, 41.18
     
-    # Tile merkez noktasının lat/lon değerlerini hesapla
+    # Calculate lat/lon of tile center point
     n = 2 ** z
     lon_deg = (x + 0.5) / n * 360.0 - 180.0
     lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * (y + 0.5) / n)))
     lat_deg = math.degrees(lat_rad)
     
-    # AOI dışında mı kontrol et
+    # Check if outside AOI
     if not (LON_MIN <= lon_deg <= LON_MAX and LAT_MIN <= lat_deg <= LAT_MAX):
         return None, None
     
-    # Normalize et (0-1 arası)
+    # Normalize (between 0-1)
     lon_norm = (lon_deg - LON_MIN) / (LON_MAX - LON_MIN)
     lat_norm = (lat_deg - LAT_MIN) / (LAT_MAX - LAT_MIN)
     
-    # Patch index hesapla (floor ile)
-    # 18 row: index 0-17
-    # 40 col: index 0-39
+    # Calculate patch index (using floor)
+    # 18 rows: index 0-17
+    # 40 cols: index 0-39
     row_index = int((1.0 - lat_norm) * 18)
     col_index = int(lon_norm * 40)
     
-    # Sınırları zorla
+    # Clamp boundaries
     row_index = max(0, min(17, row_index))
     col_index = max(0, min(39, col_index))
     
-    # Patch koordinatları
+    # Patch coordinates
     patch_row = row_index * 256
     patch_col = col_index * 256
     
@@ -97,34 +97,34 @@ def tile_to_patch_coords(z, x, y):
 
 def parse_patch_filename(year: int, quarter: int, row: int, col: int) -> str:
     """
-    Patch parametrelerinden dosya adı oluştur.
+    Create filename from patch parameters.
     
     Args:
-        year: Yıl (2018-2025)
-        quarter: Çeyrek (1-4)
-        row: Patch row koordinatı
-        col: Patch col koordinatı
+        year: Year (2018-2025)
+        quarter: Quarter (1-4)
+        row: Patch row coordinate
+        col: Patch col coordinate
     
     Returns:
-        str: Dosya adı (örn: "2018_Q1_00000_00256.npy")
+        str: Filename (e.g. "2018_Q1_00000_00256.npy")
     """
     return f"{year}_Q{quarter}_{row:05d}_{col:05d}.npy"
 
 
 # ============================================================================
-# PATCH YÜKLEME
+# PATCH LOADING
 # ============================================================================
 
 @lru_cache(maxsize=200)
 def load_patch_from_disk(filepath: Path) -> Optional[np.ndarray]:
     """
-    Local disk'ten patch yükle (cache'li).
+    Load patch from local disk (cached).
     
     Args:
-        filepath: Patch dosyasının tam yolu
+        filepath: Full path to patch file
     
     Returns:
-        np.ndarray: Patch data veya None
+        np.ndarray: Patch data or None
     """
     if not filepath.exists():
         return None
@@ -132,19 +132,19 @@ def load_patch_from_disk(filepath: Path) -> Optional[np.ndarray]:
     try:
         return np.load(filepath)
     except Exception as e:
-        print(f"❌ Patch okuma hatası ({filepath.name}): {e}")
+        print(f"❌ Patch read error ({filepath.name}): {e}")
         return None
 
 
 # ============================================================================
-# GÖRSELLEŞTİRME
+# VISUALIZATION
 # ============================================================================
 
 
 
 
 def visualize_ndvi(patch_data: np.ndarray) -> Image.Image:
-    """NDVI (Yeşil Alan): Kahverengi → Sarı → Yeşil"""
+    """NDVI (Green Area): Brown → Yellow → Green"""
     red = np.nan_to_num(patch_data[2, :, :], nan=0.0).astype(np.float32)
     nir = np.nan_to_num(patch_data[3, :, :], nan=0.0).astype(np.float32)
     
@@ -152,8 +152,8 @@ def visualize_ndvi(patch_data: np.ndarray) -> Image.Image:
     ndvi = np.clip(ndvi, -1, 1)
     ndvi_norm = (ndvi + 1) / 2  # 0-1 arası
     
-    # Canlı ve net gradient: Kahverengi/Kırmızı (0) → Sarı (0.5) → Koyu Yeşil (1)
-    # NDBI ile aynı mantık, ama daha canlı renkler
+    # Vivid and clear gradient: Brown/Red (0) → Yellow (0.5) → Dark Green (1)
+    # Same logic as NDBI, but more vivid colors
     r = np.where(ndvi_norm < 0.5,
                  180 + (255 - 180) * (ndvi_norm * 2),      # 180→255 (kahverengi→sarı)
                  255 - (255 - 34) * ((ndvi_norm - 0.5) * 2))  # 255→34 (sarı→koyu yeşil)
@@ -169,7 +169,7 @@ def visualize_ndvi(patch_data: np.ndarray) -> Image.Image:
 
 
 def visualize_ndwi(patch_data: np.ndarray) -> Image.Image:
-    """NDWI (Su Alanı): Bej → Cyan → Mavi"""
+    """NDWI (Water Area): Beige → Cyan → Blue"""
     green = np.nan_to_num(patch_data[1, :, :], nan=0.0).astype(np.float32)
     nir = np.nan_to_num(patch_data[3, :, :], nan=0.0).astype(np.float32)
     
@@ -177,8 +177,8 @@ def visualize_ndwi(patch_data: np.ndarray) -> Image.Image:
     ndwi = np.clip(ndwi, -1, 1)
     ndwi_norm = (ndwi + 1) / 2  # 0-1 arası
     
-    # NDBI gibi basit iki aşamalı gradient
-    # 0 (bej/kuru) → 0.5 (cyan) → 1 (mavi/su)
+    # Simple two-step gradient like NDBI
+    # 0 (beige/dry) → 0.5 (cyan) → 1 (blue/water)
     r = np.where(ndwi_norm < 0.5,
                  210 - (210 - 100) * (ndwi_norm * 2),      # 210→100
                  100 - (100 - 30) * ((ndwi_norm - 0.5) * 2))  # 100→30
@@ -194,7 +194,7 @@ def visualize_ndwi(patch_data: np.ndarray) -> Image.Image:
 
 
 def visualize_ndbi(patch_data: np.ndarray) -> Image.Image:
-    """NDBI (Beton/Yapı): Yeşil-Mavi → Gri → Turuncu-Kırmızı"""
+    """NDBI (Built-up): Green-Blue → Gray → Orange-Red"""
     swir1 = np.nan_to_num(patch_data[4, :, :], nan=0.0).astype(np.float32)
     nir = np.nan_to_num(patch_data[3, :, :], nan=0.0).astype(np.float32)
     
@@ -202,7 +202,7 @@ def visualize_ndbi(patch_data: np.ndarray) -> Image.Image:
     ndbi = np.clip(ndbi, -1, 1)
     ndbi_norm = (ndbi + 1) / 2  # 0-1 arası
     
-    # Gradient: Yeşil-mavi (doğal, 0) → Gri (0.5) → Kırmızı (kentsel, 1)
+    # Gradient: Green-blue (natural, 0) → Gray (0.5) → Red (urban, 1)
     r = np.where(ndbi_norm < 0.5,
                  50 + (180 - 50) * (ndbi_norm * 2),        # 50→180
                  180 + (220 - 180) * ((ndbi_norm - 0.5) * 2))  # 180→220
@@ -218,15 +218,15 @@ def visualize_ndbi(patch_data: np.ndarray) -> Image.Image:
 
 
 def visualize_rgb(patch_data: np.ndarray) -> Image.Image:
-    """True Color RGB: Doğal renkler"""
+    """True Color RGB: Natural colors"""
     red = np.nan_to_num(patch_data[2, :, :], nan=0.0)
     green = np.nan_to_num(patch_data[1, :, :], nan=0.0)
     blue = np.nan_to_num(patch_data[0, :, :], nan=0.0)
     
-    # Global normalizasyon sabitleri (Sentinel-2 için tipik değerler)
-    # Bu değerler tüm patch'ler için aynı, böylece tutarlı renkler elde ederiz
+    # Global normalization constants (typical for Sentinel-2)
+    # These values are the same for all patches, so we get consistent colors
     def normalize(band):
-        # 0-3000 aralığını 0-255'e normalize et (Sentinel-2 reflectance değerleri)
+        # Normalize 0-3000 range to 0-255 (Sentinel-2 reflectance values)
         band = np.clip(band, 0, 3000)
         band = band / 3000.0
         return (band * 255).astype(np.uint8)
@@ -236,7 +236,7 @@ def visualize_rgb(patch_data: np.ndarray) -> Image.Image:
 
 
 # ============================================================================
-# API ENDPOINT FONKSİYONU
+# API ENDPOINT FUNCTION
 # ============================================================================
 
 def get_tile_response(
@@ -248,27 +248,27 @@ def get_tile_response(
     y: int
 ) -> StreamingResponse:
     """
-    Tile isteği için PNG response döndür.
+    Return PNG response for tile request.
     
     Args:
-        year: Yıl (2018-2025)
-        quarter: Çeyrek (1-4)
-        index: Görselleştirme tipi
-            - 'ndvi': Yeşil alan
-            - 'ndwi': Su alanı
-            - 'ndbi': Beton/Yapı
-            - 'rgb': Doğal görünüm
+        year: Year (2018-2025)
+        quarter: Quarter (1-4)
+        index: Visualization type
+            - 'ndvi': Green area
+            - 'ndwi': Water area
+            - 'ndbi': Built-up
+            - 'rgb': Natural view
         z: Zoom level
-        x: X tile koordinatı
-        y: Y tile koordinatı
+        x: X tile coordinate
+        y: Y tile coordinate
     
     Returns:
         StreamingResponse: PNG tile (256x256)
     """
-    # Tile → Patch koordinat dönüşümü
+    # Tile → Patch coordinate conversion
     row, col = tile_to_patch_coords(z, x, y)
     
-    # Kapsam dışı tile için boş döndür
+    # Return empty for out-of-bounds tile
     if row is None or col is None:
         empty_img = Image.new('RGBA', (256, 256), (0, 0, 0, 0))
         buf = io.BytesIO()
@@ -276,22 +276,22 @@ def get_tile_response(
         buf.seek(0)
         return StreamingResponse(buf, media_type='image/png')
     
-    # Dosya adı oluştur
+    # Create filename
     filename = parse_patch_filename(year, quarter, row, col)
     
-    # Image patch yükle
+    # Load image patch
     filepath = IMAGES_DIR / filename
     patch_data = load_patch_from_disk(filepath)
     
     if patch_data is None:
-        # Dosya bulunamadı - boş tile
+        # File not found - return empty tile
         empty_img = Image.new('RGBA', (256, 256), (0, 0, 0, 0))
         img_bytes = io.BytesIO()
         empty_img.save(img_bytes, format='PNG')
         img_bytes.seek(0)
         return StreamingResponse(img_bytes, media_type='image/png')
     
-    # Index'e göre görselleştir
+    # Visualize according to index
     try:
         if index == 'ndvi':
             tile_image = visualize_ndvi(patch_data)
@@ -306,15 +306,15 @@ def get_tile_response(
             tile_image = visualize_rgb(patch_data)
     
     except Exception as e:
-        print(f"❌ Görselleştirme hatası ({index}, {filename}): {e}")
-        # Hata durumunda boş tile
+        print(f"❌ Visualization error ({index}, {filename}): {e}")
+        # In case of error, return empty tile
         empty_img = Image.new('RGBA', (256, 256), (0, 0, 0, 0))
         img_bytes = io.BytesIO()
         empty_img.save(img_bytes, format='PNG')
         img_bytes.seek(0)
         return StreamingResponse(img_bytes, media_type='image/png')
     
-    # PNG'ye çevir ve döndür
+    # Convert to PNG and return
     img_bytes = io.BytesIO()
     tile_image.save(img_bytes, format='PNG', optimize=True)
     img_bytes.seek(0)
@@ -323,7 +323,7 @@ def get_tile_response(
         img_bytes,
         media_type='image/png',
         headers={
-            'Cache-Control': 'public, max-age=86400',  # 24 saat cache
+            'Cache-Control': 'public, max-age=86400',  # 24 hour cache
             'Access-Control-Allow-Origin': '*',
         }
     )

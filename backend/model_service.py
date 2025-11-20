@@ -1,25 +1,25 @@
 """
 Model Service - UNET + Conv3D Temporal Prediction
 ==================================================
-Eğitilmiş modelleri yükler ve tahmin yapar.
+Loads trained models and performs predictions.
 
-Modeller:
+Models:
 - UNET: 4-class segmentation (background, green, gray, water)
-  Input: 9 bands (B02-B12 + NDVI, NDWI, NDBI)
-  Output: 4-class softmax [C, H, W]
+    Input: 9 bands (B02-B12 + NDVI, NDWI, NDBI)
+    Output: 4-class softmax [C, H, W]
 
 - Conv3D: Temporal prediction (8 quarters → t+1)
-  Input: [T, 4, H, W] softmax sequence
-  Output: [4, H, W] prediction for t+1
+    Input: [T, 4, H, W] softmax sequence
+    Output: [4, H, W] prediction for t+1
 
-Veri Akışı:
-1. Tile'dan 6 band oku (.npy)
-2. NDVI, NDWI, NDBI hesapla → 9 band
-3. Normalize et (mean/std)
+Data Flow:
+1. Read 6 bands from tile (.npy)
+2. Calculate NDVI, NDWI, NDBI → 9 bands
+3. Normalize (mean/std)
 4. UNET → softmax
-5. Sequence oluştur (8 çeyrek)
-6. Conv3D → t+1 tahmin
-7. İstatistikleri hesapla ve döndür
+5. Build sequence (8 quarters)
+6. Conv3D → t+1 prediction
+7. Calculate and return statistics
 """
 
 import re
@@ -32,34 +32,34 @@ import segmentation_models_pytorch as smp
 
 
 # ============================================================================
-# YAPILANDIRMA
+# CONFIGURATION
 # ============================================================================
 
-# Tile ve model dosyaları
+# Tile and model file paths
 TILES_DIR = Path(__file__).parent / "tiles" / "images"
-MODEL_DIR = Path(__file__).parent / "models"  # Modelleri buraya koyacağız
+MODEL_DIR = Path(__file__).parent / "models"
 MEAN_PATH = MODEL_DIR / "band_mean.npy"
 STD_PATH = MODEL_DIR / "band_std.npy"
 UNET_PATH = MODEL_DIR / "unet4_best.pt"
 CONV3D_PATH = MODEL_DIR / "temporal3d_tplus1.pt"
 
-# Device (GPU varsa kullan)
+# Device (use GPU if available)
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Dosya ismi regex: 2025_Q1_00000_00256.npy
+# Filename regex: 2025_Q1_00000_00256.npy
 FILENAME_PATTERN = re.compile(r"(?P<year>\d{4})_Q(?P<quarter>[1-4])_(?P<row>\d{5})_(?P<col>\d{5})\.npy")
 
-# Sınıf isimleri
+# Class names
 CLASS_NAMES = ["background", "green", "gray", "water"]
 
 
 # ============================================================================
-# HELPER FUNCTIONS
+# DERIVING 9 BANDS AND FILENAME PARSING
 # ============================================================================
 
 def calculate_spectral_indices(six_band_data: np.ndarray) -> np.ndarray:
     """
-    6 banttan NDVI, NDWI, NDBI hesapla.
+    Calculate NDVI, NDWI, NDBI from 6 bands.
     Input: [B02, B03, B04, B08, B11, B12] - (6, H, W)
     Output: [NDVI, NDWI, NDBI] - (3, H, W)
     """
@@ -77,7 +77,7 @@ def calculate_spectral_indices(six_band_data: np.ndarray) -> np.ndarray:
 
 def calculate_9_bands_from_6(six_band_data: np.ndarray) -> np.ndarray:
     """
-    6 banttan 9 bant oluştur: [B02-B12, NDVI, NDWI, NDBI]
+    Create 9 bands from 6 bands: [B02-B12, NDVI, NDWI, NDBI]
     Input: (6, H, W)
     Output: (9, H, W)
     """
@@ -87,14 +87,12 @@ def calculate_9_bands_from_6(six_band_data: np.ndarray) -> np.ndarray:
 
 def parse_filename(filename: str) -> Optional[Dict[str, int]]:
     """
-    Dosya isminden metadata çıkar.
-    
+    Extract metadata from filename.
     Args:
         filename: "2025_Q1_00000_00256.npy"
-    
     Returns:
         {"year": 2025, "quarter": 1, "row": 0, "col": 256}
-        veya None (eşleşmezse)
+        or None if not matched
     """
     match = FILENAME_PATTERN.match(filename)
     if not match:
@@ -109,12 +107,12 @@ def parse_filename(filename: str) -> Optional[Dict[str, int]]:
 
 
 def get_tile_key(row: int, col: int) -> Tuple[int, int]:
-    """Tile koordinatları için benzersiz anahtar."""
+    """Unique key for tile coordinates."""
     return (row, col)
 
 
 # ============================================================================
-# CONV3D MODEL TANIMI (Eğitim kodundan)
+# CONV3D MODEL DEFINITION (from training code)
 # ============================================================================
 
 class Tiny3D(nn.Module):
@@ -154,13 +152,13 @@ class Tiny3D(nn.Module):
 
 
 # ============================================================================
-# MODEL YÜKLEME
+# MODEL LOADING
 # ============================================================================
 
 class ModelService:
     """
-    Model yükleme ve tahmin servisi.
-    Singleton pattern kullanır (uygulama başlangıcında bir kez yüklenir).
+    Model loading and prediction service.
+    Uses singleton pattern (loaded once at app startup).
     """
     
     def __init__(self):
@@ -173,14 +171,14 @@ class ModelService:
         self.loaded = False
     
     def load_models(self):
-        """Tüm modelleri ve normalizasyon istatistiklerini yükle."""
+        """Load all models and normalization statistics."""
         if self.loaded:
             print("✓ Modeller zaten yüklü")
             return
         
         print(f"📦 Modeller yükleniyor... (Device: {DEVICE})")
         
-        # 1. Mean/Std yükle
+        # 1. Load Mean/Std
         if not MEAN_PATH.exists() or not STD_PATH.exists():
             raise FileNotFoundError(
                 f"Mean/Std dosyaları bulunamadı:\n"
@@ -196,7 +194,7 @@ class ModelService:
         assert self.std_stats.shape[0] == 9, "Std 9 band olmalı"
         print(f"  ✓ Normalizasyon istatistikleri yüklendi (9 band)")
         
-        # 2. UNET yükle
+        # 2. Load UNET
         if not UNET_PATH.exists():
             raise FileNotFoundError(
                 f"UNET modeli bulunamadı: {UNET_PATH}\n"
@@ -216,7 +214,7 @@ class ModelService:
         self.unet_model.eval()
         print(f"  ✓ UNET modeli yüklendi")
         
-        # 3. Conv3D modelleri yükle
+        # 3. Load Conv3D models
         # t+1
         if not CONV3D_PATH.exists():
             print(f"  ⚠ Conv3D t+1 modeli bulunamadı: {CONV3D_PATH}")
@@ -252,29 +250,27 @@ class ModelService:
         
         self.loaded = True
         torch.backends.cudnn.benchmark = True
-        print(f"✅ Tüm modeller hazır!")
+        print(f"✅ Tüm modeller yüklendi!")
     
     def process_tile_to_softmax(self, tile_path: Path) -> np.ndarray:
         """
-        Bir tile'ı UNET ile işleyip softmax çıktısı üret.
-        
+        Process a tile with UNET and produce softmax output.
         Args:
-            tile_path: 6-band .npy dosyası
-        
+            tile_path: 6-band .npy file
         Returns:
             softmax: (4, H, W) float32 array
         """
         if not self.loaded:
             raise RuntimeError("Modeller yüklenmemiş! load_models() çağırın.")
         
-        # 1. Tile'ı oku (6 band)
+        # 1. Read tile (6 bands)
         six_band = np.load(tile_path).astype(np.float32)
         six_band = np.nan_to_num(six_band, nan=0.0, posinf=0.0, neginf=0.0)
         
-        # 2. 9 banda dönüştür
+        # 2. Convert to 9 bands
         nine_band = calculate_9_bands_from_6(six_band)
         
-        # 3. Normalize et
+        # 3. Normalize
         mean_tensor = torch.from_numpy(self.mean_stats)[:, None, None].to(DEVICE)
         std_tensor = torch.from_numpy(self.std_stats)[:, None, None].to(DEVICE)
         
@@ -291,9 +287,9 @@ class ModelService:
     
     def predict_temporal(self, softmax_sequence: List[np.ndarray]) -> np.ndarray:
         """
-        8 çeyreklik softmax dizisinden t+1 tahmini yap.
+        Predict t+1 from 8-quarter softmax sequence.
         Args:
-            softmax_sequence: List of (4, H, W) softmax arrays (8 adet)
+            softmax_sequence: List of (4, H, W) softmax arrays (8 items)
         Returns:
             prediction: (4, H, W) softmax for t+1
         """
@@ -310,9 +306,9 @@ class ModelService:
 
     def predict_temporal_tplus4(self, softmax_sequence: List[np.ndarray]) -> np.ndarray:
         """
-        12 çeyreklik softmax dizisinden t+4 tahmini yap.
+        Predict t+4 from 12-quarter softmax sequence.
         Args:
-            softmax_sequence: List of (4, H, W) softmax arrays (12 adet)
+            softmax_sequence: List of (4, H, W) softmax arrays (12 items)
         Returns:
             prediction: (4, H, W) softmax for t+4
         """
@@ -329,9 +325,9 @@ class ModelService:
 
     def predict_temporal_tplus8(self, softmax_sequence: List[np.ndarray]) -> np.ndarray:
         """
-        16 çeyreklik softmax dizisinden t+8 tahmini yap.
+        Predict t+8 from 16-quarter softmax sequence.
         Args:
-            softmax_sequence: List of (4, H, W) softmax arrays (16 adet)
+            softmax_sequence: List of (4, H, W) softmax arrays (16 items)
         Returns:
             prediction: (4, H, W) softmax for t+8
         """
@@ -351,7 +347,7 @@ class ModelService:
 # GLOBAL INSTANCE (Singleton)
 # ============================================================================
 
-# Uygulama başlangıcında bir kez oluşturulur
+# Created once at app startup
 model_service = ModelService()
 
 
@@ -361,8 +357,7 @@ model_service = ModelService()
 
 def get_available_periods(tiles_dir: Path = TILES_DIR) -> List[Tuple[int, int]]:
     """
-    Mevcut tile dosyalarından benzersiz (year, quarter) çiftlerini al.
-    
+    Get unique (year, quarter) pairs from available tile files.
     Returns:
         [(2018, 1), (2018, 2), ..., (2025, 4)]
     """
@@ -382,15 +377,13 @@ def get_tiles_for_period(
     tiles_dir: Path = TILES_DIR
 ) -> List[Path]:
     """
-    Belirli bir dönem için tüm tile dosyalarını bul.
-    
+    Find all tile files for a specific period.
     Args:
         year: 2018-2025
         quarter: 1-4
-        tiles_dir: Tile klasörü
-    
+        tiles_dir: Tile folder
     Returns:
-        Tile dosya yolları listesi
+        List of tile file paths
     """
     pattern = f"{year}_Q{quarter}_*.npy"
     return sorted(tiles_dir.glob(pattern))
@@ -398,11 +391,9 @@ def get_tiles_for_period(
 
 def calculate_statistics_from_softmax(softmax: np.ndarray) -> Dict[str, float]:
     """
-    Softmax çıktısından sınıf yüzdelerini hesapla.
-    
+    Calculate class percentages from softmax output.
     Args:
         softmax: (4, H, W) array
-    
     Returns:
         {"green": 32.5, "gray": 60.2, "water": 7.3, "background": 0.0}
     """
@@ -427,14 +418,12 @@ def predict_period(
     tiles_dir: Path = TILES_DIR
 ) -> Dict:
     """
-    Bir dönem için tahmin yap ve istatistikleri döndür.
-    
+    Make prediction for a period and return statistics.
     Args:
-        year: Yıl
-        quarter: Çeyrek
-        use_temporal: Conv3D ile temporal tahmin kullan mı?
-        tiles_dir: Tile klasörü
-    
+        year: Year
+        quarter: Quarter
+        use_temporal: Use temporal prediction with Conv3D?
+        tiles_dir: Tile folder
     Returns:
         {
             "period": "2025 Q1",
@@ -443,34 +432,34 @@ def predict_period(
             "tile_count": 42
         }
     """
-    # Modelleri yükle (henüz yüklenmediyse)
+    # Load models (if not loaded yet)
     if not model_service.loaded:
         model_service.load_models()
     
-    # Tile'ları bul
+    # Find tiles
     tiles = get_tiles_for_period(year, quarter, tiles_dir)
     
     if not tiles:
         raise FileNotFoundError(f"Hiç tile bulunamadı: {year} Q{quarter}")
     
-    # Tüm tile'lar için tahmin yap ve birleştir
+    # Make predictions for all tiles and combine
     all_predictions = []
     
     for tile_path in tiles:
         softmax = model_service.process_tile_to_softmax(tile_path)
         all_predictions.append(softmax)
     
-    # Ortalama softmax hesapla
+    # Calculate average softmax
     avg_softmax = np.mean(all_predictions, axis=0)
     
-    # Temporal tahmin isteniyorsa
+    # If temporal prediction is requested
     method = "unet"
     if use_temporal and model_service.conv3d_model is not None:
         # TODO: 8 çeyreklik sequence oluştur ve Conv3D kullan
         # Şimdilik sadece UNET kullanıyoruz
         method = "temporal (not implemented yet)"
     
-    # İstatistikleri hesapla
+    # Calculate statistics
     stats = calculate_statistics_from_softmax(avg_softmax)
     
     return {
@@ -480,39 +469,3 @@ def predict_period(
         "tile_count": len(tiles),
         "softmax": avg_softmax  # Harita için softmax/softmap çıktısı
     }
-
-
-# ============================================================================
-# MAIN (Test için)
-# ============================================================================
-
-if __name__ == "__main__":
-    # Test
-    print("🧪 Model Service Test\n")
-    
-    # Modelleri yükle
-    try:
-        model_service.load_models()
-    except FileNotFoundError as e:
-        print(f"❌ {e}")
-        exit(1)
-    
-    # Mevcut dönemleri listele
-    periods = get_available_periods()
-    print(f"\n📅 Mevcut dönemler: {len(periods)}")
-    if periods:
-        print(f"  İlk: {periods[0]}")
-        print(f"  Son: {periods[-1]}")
-    
-    # Örnek tahmin
-    if periods:
-        year, quarter = periods[-1]
-        print(f"\n🔮 Tahmin yapılıyor: {year} Q{quarter}")
-        result = predict_period(year, quarter)
-        print(f"\n✅ Sonuç:")
-        print(f"  Period: {result['period']}")
-        print(f"  Method: {result['method']}")
-        print(f"  Tiles: {result['tile_count']}")
-        print(f"  İstatistikler:")
-        for cls, pct in result['statistics'].items():
-            print(f"    {cls}: {pct}%")
